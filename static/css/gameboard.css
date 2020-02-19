@@ -1,0 +1,51 @@
+.scoreboard {
+    width: 100%;
+    border-spacing: 30px;
+}
+.gameboard-piece {
+    margin:-11px;
+}
+.gameboard-piece p {
+    font-size: 16px;
+    padding:5px;
+}
+.gp-number {
+    border: 1px solid white;
+    border-radius: 25px;
+    background-color: var(--secondary-background);
+    color: white;
+    padding:5px;
+}
+.gp-red {
+    background-color: #750b20;
+}
+.gp-blue {
+    background-color: #191970;
+}
+.scoreboard-column {
+    float:left;
+    width: 45%;
+    padding: 10px;
+}
+.scoreboard-column h3 {
+    text-transform: uppercase;
+}
+.scoreboard-row:after {
+    content: "";
+    display: table;
+    clear: both;
+    margin-bottom: 30px;
+}
+.scoreboard-points {
+    width: 25%;
+    border-radius:20px;
+}
+.scoreboard-red {
+    background-color: #750b20;
+}
+.scoreboard-blue {
+    background-color: #19177C;
+}
+.scoreboard-points p {
+    font-size: 48px;
+}
