@@ -89,7 +89,11 @@
                     bluePoints += handOutBluePoints(links[i]);
                 }
                 piece.attr("id", "link_id_" + links[i].id);
-                piece.find('#gp-entry').html('<span class="gp-number">'+(i+1)+'</span>'+spacing+'<span style="font-size:12px;">' + links[i].finish + '</span>' + spacing + '<b>'+links[i].host+'</b>' + spacing + links[i].ability.name);
+                piece.find('#gp-entry').html('<span class="gp-number">'+(i+1)+'</span>'+spacing+'<span style="font-size:12px;">' + links[i].finish + '</span>' +
+                    spacing + '<b>'+links[i].host+'</b>' + spacing + links[i].ability.name+ '<span id="golden-goose" style="float:right;padding-right:10px;"></span>');
+                if(links[i].facts.length > 0){
+                    piece.find('#golden-goose').html('&#11088;');
+                }
                 piece.insertAfter("#game-piece-0");
                 piece.show();
             }
