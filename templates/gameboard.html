@@ -63,6 +63,15 @@
     $('.section-profile').bind('destroyed', function() {
         clearInterval(refresher);
     });
+    $(document).ready(function () {
+        let redOps = $('#red-operations').children('option').length-1;
+        let blueOps = $('#blue-operations').children('option').length-1;
+        if(redOps===0 && blueOps===0) {
+            stream('GameBoard is only useful if a red or blue operation has been started.')
+        } else {
+            stream('Select red/blue operations to see what the defense detected and responded to.');
+        }
+    });
 
     function refresh(){
         function draw(data){
@@ -100,6 +109,7 @@
         }
         let redOpId = parseInt($('#red-operations option:selected').attr('value'));
         let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
+        stream('Gold stars mean information was learned to help the team.');
         restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
     }
 
