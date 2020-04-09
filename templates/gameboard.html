@@ -26,37 +26,38 @@
              </select>
             <br>
         </div>
-        <div class="column" style="flex:75%;padding:15px;text-align: left">
-            <center>
-                <div class="scoreboard-row">
-                  <div class="scoreboard-column">
-                      <h3 id="gb-red-state"></h3>
-                      <div class="scoreboard-points scoreboard-red">
-                          <p id="gb-red-points"></p>
-                          <p style="font-size:12px;margin-top: -40px">points</p>
-                      </div>
+        <div id="the-gameboard" class="column">
+            <div class="gameboard-row scoreboard">
+              <div class="gameboard-column">
+                  <h3 id="gb-red-state">RED: <span></span></h3>
+                  <div class="scoreboard-points scoreboard-red">
+                      <p id="gb-red-points"></p>
+                      <p style="font-size:12px;margin-top: -40px">points</p>
                   </div>
-                  <div class="scoreboard-column">
-                      <h3 id="gb-blue-state"></h3>
-                      <div class="scoreboard-points scoreboard-blue">
-                          <p id="gb-blue-points"></p>
-                          <p style="font-size:12px;margin-top: -40px">points</p>
-                      </div>
+              </div>
+              <div class="gameboard-column mid">
+                  <h3>PID:</h3>
+              </div>
+              <div class="gameboard-column">
+                  <h3 id="gb-blue-state">BLUE: <span></span></h3>
+                  <div class="scoreboard-points scoreboard-blue">
+                      <p id="gb-blue-points"></p>
+                      <p style="font-size:12px;margin-top: -40px">points</p>
                   </div>
-                </div>
-                <ul id="the-gameboard" class="gameboard">
-                  <li id="game-piece-0">
-                </ul>
-            </center>
+              </div>
+            </div>
         </div>
     </div>
 </div>
 
-<li id="game-piece" style="display: none">
-    <div class="gameboard-piece">
-        <p id="gp-entry"></p>
-    </div>
-</li>
+<div id="game-piece" class="gameboard-row" style="display:none;">
+  <div class="gameboard-column gp-red">
+  </div>
+  <div class="gameboard-column mid">
+  </div>
+  <div class="gameboard-column gp-blue">
+  </div>
+</div>
 
 <script>
     let refresher = setInterval(refresh, 10000);
@@ -77,8 +78,8 @@
         function draw(data){
             let spacing = '&nbsp;&nbsp;-&nbsp;&nbsp;';
             $('#the-gameboard li').not('li:first').remove();
-            $('#gb-red-state').text(data.red_state);
-            $('#gb-blue-state').text(data.blue_state);
+            $('#gb-red-state span').text(data.red_state);
+            $('#gb-blue-state span').text(data.blue_state);
 
             let links = data.links;
             let bluePoints = 0;
@@ -88,20 +89,28 @@
                     continue;
                 }
                 let piece = $("#game-piece").clone();
+                let gpSide = '';
                 if(links[i].ability.access === 1) {
-                    piece.addClass('gp-red');
                     redPoints += handOutRedPoints(links[i]);
+                    gpSide = '.gp-red'
                 } else if (links[i].ability.access === 2) {
-                    piece.addClass('gp-blue');
                     bluePoints += handOutBluePoints(links[i]);
+                    gpSide = '.gp-blue'
                 }
                 piece.attr("id", "link_id_" + links[i].id);
-                piece.find('#gp-entry').html('<span class="gp-number">'+(i+1)+'</span>'+spacing+'<span style="font-size:12px;">' + links[i].finish + '</span>' +
-                    spacing + '<b>'+links[i].host+'</b>' + spacing + links[i].ability.name+ '<span id="golden-goose" style="float:right;padding-right:10px;"></span>');
+
+                piece.find(gpSide).html(
+                    '<span class="golden-goose"><span></span></span>' +
+                    '<span class="gp-ability">'+links[i].ability.name+'</span>' +
+                    '<span class="gp-time">' + links[i].finish + '</span>');
+                piece.find('.mid').html(
+                    '<span class="gp-pid">'+links[i].pid+'</span>' +
+                    '<span class="gp-agent">' + links[i].paw + '</span>');
                 if(links[i].facts.length > 0){
-                    piece.find('#golden-goose').html('&#11088;');
+                    piece.find('.golden-goose span').html('&#11088;');
                 }
-                piece.insertAfter("#game-piece-0");
+
+                $('#the-gameboard').append(piece);
                 piece.show();
             }
             $('#gb-blue-points').text(bluePoints);
