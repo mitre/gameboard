@@ -77,7 +77,7 @@
     function refresh(){
         function draw(data){
             let spacing = '&nbsp;&nbsp;-&nbsp;&nbsp;';
-            $('#the-gameboard li').not('li:first').remove();
+            $('#the-gameboard .gameboard-row').not(':first').remove();
             $('#gb-red-state span').text(data.red_state);
             $('#gb-blue-state span').text(data.blue_state);
 
