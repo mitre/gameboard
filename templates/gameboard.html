@@ -25,6 +25,7 @@
                 {% endfor %}
              </select>
             <br>
+            <button class="button-success button-atomic" onclick="refresh()">Refresh</button>
         </div>
         <div id="the-gameboard" class="column">
             <div class="gameboard-row scoreboard">
@@ -36,7 +37,7 @@
                   </div>
               </div>
               <div class="gameboard-column mid">
-                  <h3>PID:</h3>
+                  <h3>Process</h3>
               </div>
               <div class="gameboard-column">
                   <h3 id="gb-blue-state">BLUE: <span></span></h3>
@@ -59,11 +60,26 @@
   </div>
 </div>
 
+<div id="piece-modal" class="modal">
+    <form class="modal-content ability-viewer">
+        <div class="imgcontainer">
+          <span onclick="resetPieceModal();" class="close" title="Close Modal">&times;</span>
+        </div>
+        <div class="container" style="text-align:left">
+            <table>
+                <thead>
+                    <tr style="color: white">
+                        <th style="width: 50%">Name</th>
+                        <th style="width: 50%">Value</th>
+                    </tr>
+                </thead>
+                <tbody id="piece-modal-body"></tbody>
+            </table>
+        </div>
+    </form>
+</div>
+
 <script>
-    let refresher = setInterval(refresh, 10000);
-    $('.section-profile').bind('destroyed', function() {
-        clearInterval(refresher);
-    });
     $(document).ready(function () {
         let redOps = $('#red-operations').children('option').length-1;
         let blueOps = $('#blue-operations').children('option').length-1;
@@ -84,6 +100,7 @@
             let links = data.links;
             let bluePoints = 0;
             let redPoints = 0;
+            let pid = 0;
             for(let i=0; i<links.length; i++){
                 if(links[i].cleanup) {
                     continue;
@@ -93,18 +110,21 @@
                 if(links[i].ability.access === 1) {
                     redPoints += handOutRedPoints(links[i]);
                     gpSide = '.gp-red'
+                    pid = links[i].pid;
                 } else if (links[i].ability.access === 2) {
                     bluePoints += handOutBluePoints(links[i]);
                     gpSide = '.gp-blue'
+                    pid = links[i].pin;
                 }
                 piece.attr("id", "link_id_" + links[i].id);
-
+                piece.attr("link_no", i);
                 piece.find(gpSide).html(
                     '<span class="golden-goose"><span></span></span>' +
                     '<span class="gp-ability">'+links[i].ability.name+'</span>' +
                     '<span class="gp-time">' + links[i].finish + '</span>');
                 piece.find('.mid').html(
-                    '<span class="gp-pid">'+links[i].pid+'</span>' +
+                    '<span class="gp-pid">'+ pid +'</span>' +
+                    '<span class="gp-host">'+ links[i].host +'</span>' +
                     '<span class="gp-agent">' + links[i].paw + '</span>');
                 if(links[i].facts.length > 0){
                     piece.find('.golden-goose span').html('&#11088;');
@@ -115,6 +135,18 @@
             }
             $('#gb-blue-points').text(bluePoints);
             $('#gb-red-points').text(redPoints);
+            $(".gameboard-row").on('click', function () {
+                var $input = $( this );
+                document.getElementById('piece-modal').style.display='block';
+                let modal_body = '';
+                $.each(links[$input.attr('link_no')], function( key, value ) {
+                    if (key === 'ability'){
+                        return;
+                    }
+                    modal_body += "<tr><td>" + key + "</td><td>" + JSON.stringify(value) + "</td></tr>";
+                })
+                $("#piece-modal-body").html(modal_body);
+            })
         }
         let redOpId = parseInt($('#red-operations option:selected').attr('value'));
         let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
@@ -156,5 +188,11 @@
             points += 1;
         }
         return points;
+    }
+
+    function resetPieceModal() {
+        let modal = $('#piece-modal');
+        modal.hide();
+        modal.find('#piece-modal-body').html('');
     }
 </script>
