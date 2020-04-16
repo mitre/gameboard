@@ -55,6 +55,10 @@ function refresh(){
 
 function handOutBluePoints(link) {
     let points = 0;
+    if(link.facts.length > 0) {
+        points -= 1;
+        return points
+    }
     if(link.ability.tactic === 'response') {
         points += 2;
     }
