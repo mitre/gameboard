@@ -66,15 +66,18 @@
           <span onclick="resetPieceModal();" class="close" title="Close Modal">&times;</span>
         </div>
         <div class="container" style="text-align:left">
-            <table>
-                <thead>
-                    <tr style="color: white">
-                        <th style="width: 50%">Name</th>
-                        <th style="width: 50%">Value</th>
-                    </tr>
-                </thead>
-                <tbody id="piece-modal-body"></tbody>
-            </table>
+            <p>Response Command Run</p>
+            <code id="piece-cmd"></code>
+            <hr>
+            <p>New Facts Found</p>
+            <div id="piece-fact-list">
+                <pre id="piece-fact" style="display: none"></pre>
+            </div>
+            <hr>
+            <p>Suggested Queries</p>
+            <div id="piece-queries">
+                <pre id="piece-query" style="display: none"></pre>
+            </div>
         </div>
     </form>
 </div>

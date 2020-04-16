@@ -32,30 +32,18 @@ function refresh(){
 
         $(".golden-goose").on('click', function () {
             var $input = $( this );
-            var id = $input.attr("id").split("_")
+            var id = $input.attr("id").split("_");
             document.getElementById('piece-modal').style.display='block';
-            let modal_body = '';
-            $.each(data.exchanges[id[1]][id[2]][id[3]], function( key, value ) {
-                if (key === 'ability'){
-                    return;
-                }
-                if (key === 'command') {
-                    modal_body += "<tr><td>" + key + "</td><td>";
-                    modal_body += atob(value)
-                    modal_body += "</td></tr>";
-                    return;
-                }
-                if  (key === 'facts') {
-                    modal_body += "<tr><td>" + key + "</td><td>";
-                    value.forEach(function(fact) {
-                        modal_body += fact.trait + ": " + fact.value + "<br/>"
-                    });
-                    modal_body += "</td></tr>";
-                    return;
-                }
-//                modal_body += "<tr><td>" + key + "</td><td>" + JSON.stringify(value) + "</td></tr>";
+            let link = data.exchanges[id[1]][id[2]][id[3]];
+            $('#piece-cmd').html(atob(link['command']));
+            let factList = $('#piece-fact-list');
+            link['facts'].forEach(function(fact) {
+                let pieceFact = $('#piece-fact').clone();
+                pieceFact.html(fact.trait + ": " + fact.value);
+                pieceFact.show();
+                factList.append(pieceFact);
+//                getSuggestedQueries(fact);  // get suggested queries based on the passed in fact
             })
-            $("#piece-modal-body").html(modal_body);
         })
 
     }
@@ -104,7 +92,9 @@ function handOutRedPoints(link){
 function resetPieceModal() {
     let modal = $('#piece-modal');
     modal.hide();
-    modal.find('#piece-modal-body').html('');
+    modal.find('#piece-cmd').html('');
+    modal.find('#piece-fact-list').html('<pre id="piece-fact" style="display: none"></pre>');
+    modal.find('#piece-queries').html('<pre id="piece-query" style="display: none"></pre>');
 }
 
 function updateOpState(op, state) {
@@ -138,7 +128,6 @@ function addGamePieces(op, piece, links, pid) {
             '<span class="gp-pid">'+ pid +'</span>' +
             '<span class="gp-host">'+ links[0].host +'</span>');
     }
-
 }
 
 function updateExchanges(exchanges) {
@@ -168,4 +157,21 @@ function updateExchanges(exchanges) {
 
     $('#gb-blue-points').text(bluePoints);
     $('#gb-red-points').text(redPoints);
+}
+
+function getSuggestedQueries(fact) {
+    let queries = $('#piece-queries');
+    let queryElem = $('#piece-query').clone();
+    let query = '';
+    if (fact.trait == "host.process.recordid") {
+//        query = 'generate query based on finding a recordid'
+    }
+    else if (fact.trait == "host.process.eventid") {
+//        query = 'generate query based on finding an eventid'
+    }
+    else {
+    }
+    queryElem.html(query);
+    queryElem.show();
+    queries.append(queryElem)
 }
