@@ -17,7 +17,6 @@ function refresh(){
         let spacing = '&nbsp;&nbsp;-&nbsp;&nbsp;';
         $('#the-gameboard .gameboard-row').not(':first').remove();
 
-        let access = data.access;
         let redOp = data.red_op;
         let blueOp = data.blue_op;
 
@@ -28,7 +27,7 @@ function refresh(){
             updateOpState('blue', blueOp.state)
         }
 
-        updateExchanges(data.exchanges)
+        updateExchanges(data.exchanges, data.access)
 
         $(".golden-goose").on('click', function () {
             var $input = $( this );
@@ -46,6 +45,40 @@ function refresh(){
             })
         })
 
+        if (data.access == "blue") {
+            $(".gp-red").on('click', function () {
+                if ($(this).css( "transform" ) == 'none'){
+                    $(this).css("transform","rotateY(180deg)");
+                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "")
+                } else {
+                    $(this).css("transform","");
+                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "rotateY(180deg)")
+                }
+            })
+        }
+        if (data.access == "red") {
+            $(".gp-blue").on('click', function () {
+                if ($(this).css( "transform" ) == 'none'){
+                    $(this).css("transform","rotateY(180deg)");
+                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "")
+                } else {
+                    $(this).css("transform","");
+                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "rotateY(180deg)")
+                }
+            })
+        }
+        $(".gp-cover").on('click', function () {
+            if ($(this).css( "transform" ) == 'none'){
+                $(this).css("transform","rotateY(180deg)");
+                $(this).closest(".gp-wrapper").find(".gp-red").css("transform", "")
+                $(this).closest(".gp-wrapper").find(".gp-blue").css("transform", "")
+            } else {
+                $(this).css("transform","");
+                $(this).closest(".gp-wrapper").find(".gp-red").css("transform", "rotateY(180deg)")
+                $(this).closest(".gp-wrapper").find(".gp-blue").css("transform", "rotateY(180deg)")
+            }
+        })
+
     }
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
     let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
@@ -55,7 +88,7 @@ function refresh(){
 
 function handOutBluePoints(link) {
     let points = 0;
-    if(link.facts.length > 0) {
+    if(link.facts.length == 0) {
         points -= 1;
         return points
     }
@@ -112,19 +145,31 @@ function updateOpState(op, state) {
     status.html(state).show();
 }
 
-function addGamePieces(op, piece, links, pid) {
+function addGamePieces(op, piece, links, pid, hide) {
     for (let i=0; i<links.length;i++) {
         let col = piece.find('.' + op);
+        let wrapper = $('#' + op + '-wrapper').clone();
+        wrapper.attr('id', 'wrapper-' + key + '-' + op + '-' + i);
         let gamePiece = $('#' + op + '-piece').clone();
+        let coverPiece = $('#cover-piece').clone();
+        coverPiece.attr('id', 'cover-' + key + '-' + op + '-' + i);
+        coverPiece.css("transform","rotateY(180deg)");
         gamePiece.html(
             '<span id="result_' + key + '_' + op + '_' + i + '" class="golden-goose"><span></span></span>' +
             '<span class="gp-ability">' + links[i].ability.name + '</span>' +
             '<span class="gp-time">' + links[i].finish + '</span>' +
             '<span class="gp-agent">' + links[i].paw + '</span>');
-        col.append(gamePiece);
         gamePiece.css("display", "flex");
+        wrapper.append(coverPiece)
+        wrapper.append(gamePiece)
+        coverPiece.show()
+        wrapper.show()
         if (links[i].facts.length > 0) {
             gamePiece.find('.golden-goose span').html('&#11088;');
+        }
+        col.append(wrapper);
+        if (hide) {
+            hidePieces(gamePiece, coverPiece)
         }
     }
     if (links.length > 0) {
@@ -134,7 +179,7 @@ function addGamePieces(op, piece, links, pid) {
     }
 }
 
-function updateExchanges(exchanges) {
+function updateExchanges(exchanges, access) {
     let redPoints = 0;
     let bluePoints = 0;
     let pid = 0;
@@ -152,8 +197,14 @@ function updateExchanges(exchanges) {
         pid = key;
         piece.attr("id", "pid_id_" + pid);
 
-        addGamePieces('red', piece, exchange['red'], pid);
-        addGamePieces('blue', piece, exchange['blue'], pid);
+        if (access == "blue") {
+            addGamePieces('red', piece, exchange['red'], pid, true);
+            addGamePieces('blue', piece, exchange['blue'], pid, false);
+        }
+        else {
+            addGamePieces('red', piece, exchange['red'], pid, false);
+            addGamePieces('blue', piece, exchange['blue'], pid, true);
+        }
 
         $('#exchanges').prepend(piece);
         piece.show();
@@ -178,4 +229,9 @@ function getSuggestedQueries(fact) {
     queryElem.html(query);
     queryElem.show();
     queries.append(queryElem)
+}
+
+function hidePieces(gamePiece, coverPiece) {
+    gamePiece.css("transform", "rotateY(180deg)");
+    coverPiece.css("transform", "");
 }
