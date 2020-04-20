@@ -160,9 +160,9 @@ function addGamePieces(op, piece, links, pid, hide) {
             '<span class="gp-time">' + links[i].finish + '</span>' +
             '<span class="gp-agent">' + links[i].paw + '</span>');
         gamePiece.css("display", "flex");
+        coverPiece.css("display", "flex")
         wrapper.append(coverPiece)
         wrapper.append(gamePiece)
-        coverPiece.show()
         wrapper.show()
         if (links[i].facts.length > 0) {
             gamePiece.find('.golden-goose span').html('&#11088;');
