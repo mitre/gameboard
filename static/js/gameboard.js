@@ -7,10 +7,6 @@ $(document).ready(function () {
         stream('Select red/blue operations to see what the defense detected and responded to.');
     }
 });
-//let refresher = setInterval(refresh, 10000);
-//$('.section-profile').bind('destroyed', function() {
-//    clearInterval(refresher);
-//});
 
 function refresh(){
     function draw(data){
@@ -41,7 +37,6 @@ function refresh(){
                 pieceFact.html(fact.trait + ": " + fact.value);
                 pieceFact.show();
                 factList.append(pieceFact);
-//                getSuggestedQueries(fact);  // get suggested queries based on the passed in fact
             })
         })
 
@@ -212,23 +207,6 @@ function updateExchanges(exchanges, access) {
 
     $('#gb-blue-points').text(bluePoints);
     $('#gb-red-points').text(redPoints);
-}
-
-function getSuggestedQueries(fact) {
-    let queries = $('#piece-queries');
-    let queryElem = $('#piece-query').clone();
-    let query = '';
-    if (fact.trait == "host.process.recordid") {
-//        query = 'generate query based on finding a recordid'
-    }
-    else if (fact.trait == "host.process.eventid") {
-//        query = 'generate query based on finding an eventid'
-    }
-    else {
-    }
-    queryElem.html(query);
-    queryElem.show();
-    queries.append(queryElem)
 }
 
 function hidePieces(gamePiece, coverPiece) {
