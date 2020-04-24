@@ -1,24 +1,23 @@
 from aiohttp import web
 from aiohttp_jinja2 import template
 
-from app.service.auth_svc import check_authorization
 from app.utility.base_service import BaseService
+from app.service.auth_svc import for_all_public_methods, check_authorization
 
 
+@for_all_public_methods(check_authorization)
 class GameboardApi(BaseService):
 
     def __init__(self, services):
         self.auth_svc = services.get('auth_svc')
         self.data_svc = services.get('data_svc')
 
-    @check_authorization
     @template('gameboard.html')
     async def splash(self, request):
         red_ops = await self.data_svc.locate('operations', dict(access=self.Access.RED))
         blue_ops = await self.data_svc.locate('operations', dict(access=self.Access.BLUE))
         return dict(red_ops=red_ops, blue_ops=blue_ops)
 
-    @check_authorization
     async def get_pieces(self, request):
         data = dict(await request.json())
         red_ops = await self.data_svc.locate('operations', dict(id=data.get('red')))
