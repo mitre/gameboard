@@ -45,4 +45,4 @@ class GameboardApi(BaseService):
                 exchanges[link.pin]['blue'].append(link.display)
             else:
                 exchanges[link.pin] = dict(red=[], blue=[link.display])
-        return exchanges
+        return list(exchanges.items())

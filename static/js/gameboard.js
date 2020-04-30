@@ -29,7 +29,8 @@ function refresh(){
             var $input = $( this );
             var id = $input.attr("id").split("_");
             document.getElementById('piece-modal').style.display='block';
-            let link = data.exchanges[id[1]][id[2]][id[3]];
+            exchange = findExchange(data.exchanges, id[1])
+            let link = exchange[id[2]][id[3]];
             $('#piece-cmd').html(atob(link['command']));
             let factList = $('#piece-fact-list');
             link['facts'].forEach(function(fact) {
@@ -144,13 +145,13 @@ function addGamePieces(op, piece, links, pid, hide) {
     for (let i=0; i<links.length;i++) {
         let col = piece.find('.' + op);
         let wrapper = $('#' + op + '-wrapper').clone();
-        wrapper.attr('id', 'wrapper-' + key + '-' + op + '-' + i);
+        wrapper.attr('id', 'wrapper-' + pid + '-' + op + '-' + i);
         let gamePiece = $('#' + op + '-piece').clone();
         let coverPiece = $('#cover-piece').clone();
-        coverPiece.attr('id', 'cover-' + key + '-' + op + '-' + i);
+        coverPiece.attr('id', 'cover-' + pid + '-' + op + '-' + i);
         coverPiece.css("transform","rotateY(180deg)");
         gamePiece.html(
-            '<span id="result_' + key + '_' + op + '_' + i + '" class="golden-goose"><span></span></span>' +
+            '<span id="result_' + pid + '_' + op + '_' + i + '" class="golden-goose"><span></span></span>' +
             '<span class="gp-ability">' + links[i].ability.name + '</span>' +
             '<span class="gp-time">' + links[i].finish + '</span>' +
             '<span class="gp-agent">' + links[i].paw + '</span>');
@@ -179,8 +180,10 @@ function updateExchanges(exchanges, access) {
     let bluePoints = 0;
     let pid = 0;
 
-    for(key in exchanges){
-        let exchange = exchanges[key]
+    for(let i = 0; i < exchanges.length; i++){
+        pid = exchanges[i][0]
+        exchange = exchanges[i][1]
+
         for (let i=0; i<exchange['red'].length; i++){
             redPoints += handOutRedPoints(exchange['red'][i]);
         }
@@ -189,7 +192,6 @@ function updateExchanges(exchanges, access) {
         }
 
         let piece = $("#game-piece").clone();
-        pid = key;
         piece.attr("id", "pid_id_" + pid);
 
         if (access == "blue") {
@@ -201,7 +203,7 @@ function updateExchanges(exchanges, access) {
             addGamePieces('blue', piece, exchange['blue'], pid, true);
         }
 
-        $('#exchanges').prepend(piece);
+        $('#exchanges').append(piece);
         piece.show();
     }
 
@@ -212,4 +214,12 @@ function updateExchanges(exchanges, access) {
 function hidePieces(gamePiece, coverPiece) {
     gamePiece.css("transform", "rotateY(180deg)");
     coverPiece.css("transform", "");
+}
+
+function findExchange(exchanges, pid) {
+    for (let i = 0; i < exchanges.length; i++) {
+        if (exchanges[i][0] == pid) {
+            return exchanges[i][1]
+        }
+    }
 }
