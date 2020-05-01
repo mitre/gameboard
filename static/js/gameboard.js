@@ -46,9 +46,11 @@ function refresh(){
                 if ($(this).css( "transform" ) == 'none'){
                     $(this).css("transform","rotateY(180deg)");
                     $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "")
+                    transformMid(data.access, $(this), "rotateY(180deg)")
                 } else {
                     $(this).css("transform","");
                     $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "rotateY(180deg)")
+                    $(this).closest(".gameboard-row").find(".mid").css("transform", "")
                 }
             })
         }
@@ -57,9 +59,11 @@ function refresh(){
                 if ($(this).css( "transform" ) == 'none'){
                     $(this).css("transform","rotateY(180deg)");
                     $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "")
+                    transformMid(data.access, $(this), "rotateY(180deg)")
                 } else {
                     $(this).css("transform","");
                     $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "rotateY(180deg)")
+                    $(this).closest(".gameboard-row").find(".mid").css("transform", "")
                 }
             })
         }
@@ -68,10 +72,12 @@ function refresh(){
                 $(this).css("transform","rotateY(180deg)");
                 $(this).closest(".gp-wrapper").find(".gp-red").css("transform", "")
                 $(this).closest(".gp-wrapper").find(".gp-blue").css("transform", "")
+                transformMid(data.access, $(this), "")
             } else {
                 $(this).css("transform","");
                 $(this).closest(".gp-wrapper").find(".gp-red").css("transform", "rotateY(180deg)")
                 $(this).closest(".gp-wrapper").find(".gp-blue").css("transform", "rotateY(180deg)")
+                $(this).closest(".gameboard-row").find(".mid").css("transform", "rotateY(180deg)")
             }
         })
 
@@ -167,6 +173,10 @@ function addGamePieces(op, piece, links, pid, hide) {
         if (hide) {
             hidePieces(gamePiece, coverPiece)
         }
+        else if (!hide) {
+            let mid = gamePiece.closest(".gameboard-row").find(".mid")
+            mid.css("transform", "")
+        }
     }
     if (links.length > 0) {
         piece.find('.mid').html(
@@ -199,8 +209,8 @@ function updateExchanges(exchanges, access) {
             addGamePieces('blue', piece, exchange['blue'], pid, false);
         }
         else {
-            addGamePieces('red', piece, exchange['red'], pid, false);
             addGamePieces('blue', piece, exchange['blue'], pid, true);
+            addGamePieces('red', piece, exchange['red'], pid, false);
         }
 
         $('#exchanges').append(piece);
@@ -214,6 +224,7 @@ function updateExchanges(exchanges, access) {
 function hidePieces(gamePiece, coverPiece) {
     gamePiece.css("transform", "rotateY(180deg)");
     coverPiece.css("transform", "");
+    gamePiece.closest(".gameboard-row").find(".mid").css("transform", "rotateY(180deg)")
 }
 
 function findExchange(exchanges, pid) {
@@ -221,5 +232,16 @@ function findExchange(exchanges, pid) {
         if (exchanges[i][0] == pid) {
             return exchanges[i][1]
         }
+    }
+}
+
+function transformMid(op, reference, flip) {
+    let mid = reference.closest(".gameboard-row").find(".mid")
+    let oppositeColumn = reference.closest(".gameboard-row").find("." + op)
+    if (!oppositeColumn.is(':empty')) {
+        mid.css("transform", "")
+    }
+    else {
+        mid.css("transform", flip)
     }
 }

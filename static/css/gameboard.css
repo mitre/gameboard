@@ -148,3 +148,9 @@ p.status {
     font-size: 11px;
     color: white;
 }
+.mid {
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
