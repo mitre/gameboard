@@ -27,11 +27,10 @@ class GameboardApi(BaseService):
         response = dict(access="blue" if self.Access.BLUE in access else "red",
                         red_op=red_op[0].display if red_op else None,
                         blue_op=blue_op[0].display if blue_op else None,
-                        exchanges=self.get_exchanges(red_op, blue_op))
+                        exchanges=self._get_exchanges(red_op, blue_op))
         return web.json_response(response)
 
-    @staticmethod
-    def get_exchanges(red_ops, blue_ops):
+    def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
         red_links = sorted([link for op in red_ops for link in op.chain if link.finish and link.cleanup == 0], key=lambda i: i.finish)
         blue_links = sorted([link for op in blue_ops for link in op.chain if link.finish and link.cleanup == 0], key=lambda i: i.finish)
@@ -40,9 +39,29 @@ class GameboardApi(BaseService):
                 exchanges[link.pid]['red'].append(link.display)
             else:
                 exchanges[link.pid] = dict(red=[link.display], blue=[])
+        if blue_ops and 'Auto-Collect' not in blue_ops[0].name:
+            self._set_pins(blue_ops[0])
         for link in blue_links:
             if link.pin in exchanges.keys():
                 exchanges[link.pin]['blue'].append(link.display)
             else:
                 exchanges[link.pin] = dict(red=[], blue=[link.display])
         return list(exchanges.items())
+
+    def _set_pins(self, blue_op):
+        for lnk in blue_op.chain:
+            fact = next((f for f in lnk.used), None)
+            if fact:
+                if fact.trait == 'host.process.id':
+                    lnk.pin = int(fact.value)
+                else:
+                    lnk.pin = self._find_original_pid(blue_op.all_relationships(), fact.trait, fact.value)
+
+    def _find_original_pid(self, relationships, trait, value):
+        r_source = next((r.source for r in relationships if r.target == (trait, value)), None)
+        if r_source:
+            if r_source[0] == 'host.process.id':
+                return int(r_source[1])
+            else:
+                return self._find_original_pid(relationships, r_source.trait, r_source.value)
+        return 0
