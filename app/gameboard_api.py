@@ -24,7 +24,7 @@ class GameboardApi(BaseService):
         red_op = await self.data_svc.locate('operations', dict(id=data.get('red')))
         blue_op = await self.data_svc.locate('operations', dict(id=data.get('blue')))
         access = await self.auth_svc.get_permissions(request)
-        response = dict(access="blue" if self.Access.BLUE in access else "red",
+        response = dict(access='blue' if self.Access.BLUE in access else 'red',
                         red_op=red_op[0].display if red_op else None,
                         blue_op=blue_op[0].display if blue_op else None,
                         exchanges=self._get_exchanges(red_op, blue_op))
@@ -32,8 +32,8 @@ class GameboardApi(BaseService):
 
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
-        red_links = sorted([link for op in red_ops for link in op.chain if link.finish and link.cleanup == 0], key=lambda i: i.finish)
-        blue_links = sorted([link for op in blue_ops for link in op.chain if link.finish and link.cleanup == 0], key=lambda i: i.finish)
+        red_links = self._get_sorted_links(red_ops)
+        blue_links = self._get_sorted_links(blue_ops)
         for link in red_links:
             if link.pid in exchanges.keys():
                 exchanges[link.pid]['red'].append(link.display)
@@ -65,3 +65,7 @@ class GameboardApi(BaseService):
             else:
                 return self._find_original_pid(relationships, r_source.trait, r_source.value)
         return 0
+
+    @staticmethod
+    def _get_sorted_links(ops):
+        return sorted([lnk for op in ops for lnk in op.chain if lnk.finish and lnk.cleanup == 0], key=lambda i: i.finish)
