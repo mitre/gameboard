@@ -10,76 +10,27 @@ $(document).ready(function () {
 
 function refresh(){
     function draw(data){
-        let spacing = '&nbsp;&nbsp;-&nbsp;&nbsp;';
         $('#the-gameboard .gameboard-row').not(':first').remove();
 
         let redOp = data.red_op;
         let blueOp = data.blue_op;
+        let exchanges = data.exchanges;
+        let access = data.access;
 
-        if (redOp){
-            updateOpState('red', redOp.state)
-        }
-        if (blueOp) {
-            updateOpState('blue', blueOp.state)
-        }
+        updateOpState('red', redOp)
+        updateOpState('blue', blueOp);
+        updatePoints(exchanges);
+        updateExchanges(exchanges, access);
 
-        updateExchanges(data.exchanges, data.access)
+        $('.golden-goose').on('click', function () { getLinkInfo(exchanges, $(this)) })
 
-        $(".golden-goose").on('click', function () {
-            var $input = $( this );
-            var id = $input.attr("id").split("_");
-            document.getElementById('piece-modal').style.display='block';
-            exchange = findExchange(data.exchanges, id[1])
-            let link = exchange[id[2]][id[3]];
-            $('#piece-cmd').html(atob(link['command']));
-            let factList = $('#piece-fact-list');
-            link['facts'].forEach(function(fact) {
-                let pieceFact = $('#piece-fact').clone();
-                pieceFact.html(fact.trait + ": " + fact.value);
-                pieceFact.show();
-                factList.append(pieceFact);
-            })
-        })
-
-        if (data.access == "blue") {
-            $(".gp-red").on('click', function () {
-                if ($(this).css( "transform" ) == 'none'){
-                    $(this).css("transform","rotateY(180deg)");
-                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "")
-                    transformMid(data.access, $(this), "rotateY(180deg)")
-                } else {
-                    $(this).css("transform","");
-                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "rotateY(180deg)")
-                    $(this).closest(".gameboard-row").find(".mid").css("transform", "")
-                }
-            })
+        if (access == 'red') {
+            $('.gp-blue').on('click', function() { flipGamePiece(access, $(this)) });
         }
-        if (data.access == "red") {
-            $(".gp-blue").on('click', function () {
-                if ($(this).css( "transform" ) == 'none'){
-                    $(this).css("transform","rotateY(180deg)");
-                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "")
-                    transformMid(data.access, $(this), "rotateY(180deg)")
-                } else {
-                    $(this).css("transform","");
-                    $(this).closest(".gp-wrapper").find(".gp-cover").css("transform", "rotateY(180deg)")
-                    $(this).closest(".gameboard-row").find(".mid").css("transform", "")
-                }
-            })
+        if (access == 'blue') {
+            $('.gp-red').on('click', function() { flipGamePiece(access, $(this)) });
         }
-        $(".gp-cover").on('click', function () {
-            if ($(this).css( "transform" ) == 'none'){
-                $(this).css("transform","rotateY(180deg)");
-                $(this).closest(".gp-wrapper").find(".gp-red").css("transform", "")
-                $(this).closest(".gp-wrapper").find(".gp-blue").css("transform", "")
-                transformMid(data.access, $(this), "")
-            } else {
-                $(this).css("transform","");
-                $(this).closest(".gp-wrapper").find(".gp-red").css("transform", "rotateY(180deg)")
-                $(this).closest(".gp-wrapper").find(".gp-blue").css("transform", "rotateY(180deg)")
-                $(this).closest(".gameboard-row").find(".mid").css("transform", "rotateY(180deg)")
-            }
-        })
+        $('.gp-cover').on('click', function () { flipCoverPiece(access, $(this)) })
 
     }
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
@@ -88,11 +39,49 @@ function refresh(){
     restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
 }
 
+function updateOpState(opType, op) {
+    if (op) {
+        let status = $('#' + opType + '-status');
+        if (op.state == 'running') {
+            status.css('background-color', 'darkgoldenrod');
+        }
+        if (op.state == 'finished') {
+            status.css('background-color', 'green');
+        }
+        status.html(op.state).show();
+    }
+}
+
+function updatePoints(exchanges) {
+    function handOutPoints(opType, links) {
+        let points = 0;
+        links.forEach(function(link) {
+            if(opType == 'red') {
+                points += handOutRedPoints(link);
+            }
+            else {
+                points += handOutBluePoints(link);
+            }
+        })
+        return points;
+    }
+
+    let redPoints = 0;
+    let bluePoints = 0;
+    exchanges.forEach(function(exchange) {
+        let links = exchange[1];
+        redPoints += handOutPoints('red', links['red']);
+        bluePoints += handOutPoints('blue', links['blue']);
+    })
+    $('#gb-blue-points').text(bluePoints);
+    $('#gb-red-points').text(redPoints);
+}
+
 function handOutBluePoints(link) {
     let points = 0;
     if(link.facts.length == 0) {
         points -= 1;
-        return points
+        return points;
     }
     if(link.ability.tactic === 'response') {
         points += 2;
@@ -128,120 +117,138 @@ function handOutRedPoints(link){
     return points;
 }
 
+function updateExchanges(exchanges, access) {
+    exchanges.forEach(function(exchange) {
+        let pid = exchange[0];
+        let links = exchange[1];
+        let exchangeElem = $('#exchange').clone();
+        exchangeElem.attr('id', 'pid_id_' + pid);
+        if (access == 'blue') {
+            addGamePieces('red', exchangeElem, links['red'], pid, true);
+            addGamePieces('blue', exchangeElem, links['blue'], pid, false);
+        }
+        else {
+            addGamePieces('blue', exchangeElem, links['blue'], pid, true);
+            addGamePieces('red', exchangeElem, links['red'], pid, false);
+        }
+        $('#exchanges').append(exchangeElem);
+        exchangeElem.show();
+    })
+}
+
+function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
+    for (let i=0; i<links.length;i++) {
+        let coverPiece = $('#cover-piece').clone();
+        coverPiece.attr('id', 'cover-' + pid + '-' + opType + '-' + i);
+        coverPiece.css('transform','rotateY(180deg)');
+        coverPiece.css('display', 'flex');
+
+        let gamePiece = $('#' + opType + '-piece').clone();
+        gamePiece.html(
+            '<span id="result_' + pid + '_' + opType + '_' + i + '" class="golden-goose"><span></span></span>' +
+            '<span class="gp-ability">' + links[i].ability.name + '</span>' +
+            '<span class="gp-time">' + links[i].finish + '</span>' +
+            '<span class="gp-agent">' + links[i].paw + '</span>');
+        if (links[i].facts.length > 0) {
+            gamePiece.find('.golden-goose span').html('&#11088;');
+        }
+        gamePiece.css('display', 'flex');
+
+        let wrapper = $('#' + opType + '-wrapper').clone();
+        wrapper.attr('id', 'wrapper-' + pid + '-' + opType + '-' + i);
+        wrapper.append(coverPiece);
+        wrapper.append(gamePiece);
+        wrapper.show();
+
+        let col = exchangeElem.find('.' + opType);
+        col.append(wrapper);
+
+        let mid = gamePiece.closest('.gameboard-row').find('.mid');
+        if (isHidden) {
+            hidePieces(gamePiece, coverPiece);
+        }
+        else {
+            mid.css('transform', '');
+        }
+        mid.html(
+            '<span class="gp-pid">'+ pid +'</span>' +
+            '<span class="gp-host">'+ links[i].host +'</span>');
+    }
+}
+
+function hidePieces(gamePiece, coverPiece) {
+    gamePiece.css('transform', 'rotateY(180deg)');
+    coverPiece.css('transform', '');
+    gamePiece.closest('.gameboard-row').find('.mid').css('transform', 'rotateY(180deg)');
+}
+
+function getLinkInfo(exchanges, result) {
+    let id = result.attr('id').split('_');
+    let exchange = findExchange(exchanges, id[1]);
+    let link = exchange[id[2]][id[3]];
+    document.getElementById('piece-modal').style.display='block';
+    $('#piece-cmd').html(atob(link['command']));
+    let factList = $('#piece-fact-list');
+    link['facts'].forEach(function(fact) {
+        let pieceFact = $('#piece-fact').clone();
+        pieceFact.html(fact.trait + ': ' + fact.value);
+        pieceFact.show();
+        factList.append(pieceFact);
+    })
+}
+
+function findExchange(exchanges, pid) {
+    for (let i=0; i<exchanges.length; i++) {
+        if (exchanges[i][0] == pid) {
+            return exchanges[i][1];
+        }
+    }
+}
+
+function flipGamePiece(access, gamePiece) {
+    if (gamePiece.css('transform') == 'none') {
+        gamePiece.css('transform','rotateY(180deg)');
+        gamePiece.closest('.gp-wrapper').find('.gp-cover').css('transform', '');
+        transformMid(access, gamePiece, 'rotateY(180deg)');
+    } else {
+        gamePiece.css('transform','');
+        gamePiece.closest('.gp-wrapper').find('.gp-cover').css('transform', 'rotateY(180deg)');
+        gamePiece.closest('.gameboard-row').find('.mid').css('transform', '');
+    }
+}
+
+function flipCoverPiece(access, cover) {
+    if (cover.css('transform') == 'none') {
+        cover.css('transform','rotateY(180deg)');
+        cover.closest('.gp-wrapper').find('.gp-red').css('transform', '');
+        cover.closest('.gp-wrapper').find('.gp-blue').css('transform', '');
+        transformMid(access, cover, '');
+    } else {
+        cover.css('transform','');
+        cover.closest('.gp-wrapper').find('.gp-red').css('transform', 'rotateY(180deg)');
+        cover.closest('.gp-wrapper').find('.gp-blue').css('transform', 'rotateY(180deg)');
+        cover.closest('.gameboard-row').find('.mid').css('transform', 'rotateY(180deg)');
+    }
+
+}
+
+function transformMid(access, reference, transformation) {
+    let mid = reference.closest('.gameboard-row').find('.mid');
+    let oppositeColumn = reference.closest('.gameboard-row').find('.' + access);
+    if (!oppositeColumn.is(':empty')) {
+        mid.css('transform', '');
+        console.log(mid.css('transform'))
+    }
+    else {
+        mid.css('transform', transformation);
+        console.log(mid.css('transform'))
+    }
+}
+
 function resetPieceModal() {
     let modal = $('#piece-modal');
     modal.hide();
     modal.find('#piece-cmd').html('');
     modal.find('#piece-fact-list').html('<pre id="piece-fact" style="display: none"></pre>');
     modal.find('#piece-queries').html('<pre id="piece-query" style="display: none"></pre>');
-}
-
-function updateOpState(op, state) {
-    let status = $('#' + op + '-status');
-    if (state == "running") {
-        status.css("background-color", "darkgoldenrod")
-    }
-    if (state == "finished") {
-        status.css("background-color", "green")
-    }
-    status.html(state).show();
-}
-
-function addGamePieces(op, piece, links, pid, hide) {
-    for (let i=0; i<links.length;i++) {
-        let col = piece.find('.' + op);
-        let wrapper = $('#' + op + '-wrapper').clone();
-        wrapper.attr('id', 'wrapper-' + pid + '-' + op + '-' + i);
-        let gamePiece = $('#' + op + '-piece').clone();
-        let coverPiece = $('#cover-piece').clone();
-        coverPiece.attr('id', 'cover-' + pid + '-' + op + '-' + i);
-        coverPiece.css("transform","rotateY(180deg)");
-        gamePiece.html(
-            '<span id="result_' + pid + '_' + op + '_' + i + '" class="golden-goose"><span></span></span>' +
-            '<span class="gp-ability">' + links[i].ability.name + '</span>' +
-            '<span class="gp-time">' + links[i].finish + '</span>' +
-            '<span class="gp-agent">' + links[i].paw + '</span>');
-        gamePiece.css("display", "flex");
-        coverPiece.css("display", "flex")
-        wrapper.append(coverPiece)
-        wrapper.append(gamePiece)
-        wrapper.show()
-        if (links[i].facts.length > 0) {
-            gamePiece.find('.golden-goose span').html('&#11088;');
-        }
-        col.append(wrapper);
-        if (hide) {
-            hidePieces(gamePiece, coverPiece)
-        }
-        else if (!hide) {
-            let mid = gamePiece.closest(".gameboard-row").find(".mid")
-            mid.css("transform", "")
-        }
-    }
-    if (links.length > 0) {
-        piece.find('.mid').html(
-            '<span class="gp-pid">'+ pid +'</span>' +
-            '<span class="gp-host">'+ links[0].host +'</span>');
-    }
-}
-
-function updateExchanges(exchanges, access) {
-    let redPoints = 0;
-    let bluePoints = 0;
-    let pid = 0;
-
-    for(let i = 0; i < exchanges.length; i++){
-        pid = exchanges[i][0]
-        exchange = exchanges[i][1]
-
-        for (let i=0; i<exchange['red'].length; i++){
-            redPoints += handOutRedPoints(exchange['red'][i]);
-        }
-        for (let i=0; i<exchange['blue'].length; i++){
-            bluePoints += handOutBluePoints(exchange['blue'][i]);
-        }
-
-        let piece = $("#game-piece").clone();
-        piece.attr("id", "pid_id_" + pid);
-
-        if (access == "blue") {
-            addGamePieces('red', piece, exchange['red'], pid, true);
-            addGamePieces('blue', piece, exchange['blue'], pid, false);
-        }
-        else {
-            addGamePieces('blue', piece, exchange['blue'], pid, true);
-            addGamePieces('red', piece, exchange['red'], pid, false);
-        }
-
-        $('#exchanges').append(piece);
-        piece.show();
-    }
-
-    $('#gb-blue-points').text(bluePoints);
-    $('#gb-red-points').text(redPoints);
-}
-
-function hidePieces(gamePiece, coverPiece) {
-    gamePiece.css("transform", "rotateY(180deg)");
-    coverPiece.css("transform", "");
-    gamePiece.closest(".gameboard-row").find(".mid").css("transform", "rotateY(180deg)")
-}
-
-function findExchange(exchanges, pid) {
-    for (let i = 0; i < exchanges.length; i++) {
-        if (exchanges[i][0] == pid) {
-            return exchanges[i][1]
-        }
-    }
-}
-
-function transformMid(op, reference, flip) {
-    let mid = reference.closest(".gameboard-row").find(".mid")
-    let oppositeColumn = reference.closest(".gameboard-row").find("." + op)
-    if (!oppositeColumn.is(':empty')) {
-        mid.css("transform", "")
-    }
-    else {
-        mid.css("transform", flip)
-    }
 }
