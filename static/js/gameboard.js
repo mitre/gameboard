@@ -144,13 +144,14 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         coverPiece.css('display', 'flex');
 
         let gamePiece = $('#' + opType + '-piece').clone();
-        gamePiece.html(
-            '<span id="result_' + pid + '_' + opType + '_' + i + '" class="golden-goose"><span></span></span>' +
-            '<span class="gp-ability">' + links[i].ability.name + '</span>' +
-            '<span class="gp-time">' + links[i].finish + '</span>' +
-            '<span class="gp-agent">' + links[i].paw + '</span>');
+        gamePiece.attr('id', 'piece-' + pid + '-' + opType + '-' + i);
+        gamePiece.find('.gp-ability').html(links[i].ability.name);
+        gamePiece.find('.gp-time').html(links[i].finish);
+        gamePiece.find('.gp-agent').html(links[i].paw);
         if (links[i].facts.length > 0) {
-            gamePiece.find('.golden-goose span').html('&#11088;');
+            let goldenGoose = gamePiece.find('.golden-goose');
+            goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
+            goldenGoose.find('span').html('&#11088;');
         }
         gamePiece.css('display', 'flex');
 
@@ -164,15 +165,14 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         col.append(wrapper);
 
         let mid = gamePiece.closest('.gameboard-row').find('.mid');
+        mid.find('.gp-pid').html(pid);
+        mid.find('.gp-host').html(links[i].host);
         if (isHidden) {
             hidePieces(gamePiece, coverPiece);
         }
         else {
             mid.css('transform', '');
         }
-        mid.html(
-            '<span class="gp-pid">'+ pid +'</span>' +
-            '<span class="gp-host">'+ links[i].host +'</span>');
     }
 }
 
@@ -190,7 +190,9 @@ function getLinkInfo(exchanges, result) {
     $('#piece-cmd').html(atob(link['command']));
     let factList = $('#piece-fact-list');
     link['facts'].forEach(function(fact) {
-        let pieceFact = $('#piece-fact').clone();
+        let pieceFact = $('#default-fact').clone();
+        pieceFact.removeAttr('id');
+        pieceFact.addClass('piece-fact');
         pieceFact.html(fact.trait + ': ' + fact.value);
         pieceFact.show();
         factList.append(pieceFact);
@@ -237,18 +239,16 @@ function transformMid(access, reference, transformation) {
     let oppositeColumn = reference.closest('.gameboard-row').find('.' + access);
     if (!oppositeColumn.is(':empty')) {
         mid.css('transform', '');
-        console.log(mid.css('transform'))
     }
     else {
         mid.css('transform', transformation);
-        console.log(mid.css('transform'))
     }
 }
 
 function resetPieceModal() {
     let modal = $('#piece-modal');
     modal.hide();
-    modal.find('#piece-cmd').html('');
-    modal.find('#piece-fact-list').html('<pre id="piece-fact" style="display: none"></pre>');
-    modal.find('#piece-queries').html('<pre id="piece-query" style="display: none"></pre>');
+    $('#piece-cmd').empty();
+    $('#piece-fact-list').find('.piece-fact').remove();
+    $('#piece-queries').find('.piece-query').remove();
 }

@@ -54,13 +54,26 @@
 
 <div id="exchange" class="gameboard-row" style="display:none;">
   <div class="gameboard-column red"></div>
-  <div class="gameboard-column mid"></div>
+  <div class="gameboard-column mid">
+      <span class="gp-pid"></span>
+      <span class="gp-host"></span>
+  </div>
   <div class="gameboard-column blue"></div>
 </div>
 <div id="red-wrapper" class="gp-wrapper" style="display:none"></div>
 <div id="blue-wrapper" class="gp-wrapper" style="display:none"></div>
-<div id="red-piece" class="gameboard-column gp-red" style="display:none"></div>
-<div id="blue-piece" class="gameboard-column gp-blue" style="display:none"></div>
+<div id="red-piece" class="gameboard-column gp-red" style="display:none">
+    <span class="golden-goose"><span></span></span>
+    <span class="gp-ability"></span>
+    <span class="gp-time"></span>
+    <span class="gp-agent"></span>
+</div>
+<div id="blue-piece" class="gameboard-column gp-blue" style="display:none">
+    <span class="golden-goose"><span></span></span>
+    <span class="gp-ability"></span>
+    <span class="gp-time"></span>
+    <span class="gp-agent"></span>
+</div>
 <div id="cover-piece" class="gameboard-column gp-cover" style="display:none">
     <span class="gp-reveal">Click to Reveal</span>
 </div>
@@ -76,12 +89,12 @@
             <hr>
             <p>New Facts Found</p>
             <div id="piece-fact-list">
-                <pre id="piece-fact" style="display: none"></pre>
+                <pre id="default-fact" style="display: none"></pre>
             </div>
             <hr>
             <p>Suggested Queries</p>
             <div id="piece-queries">
-                <pre id="piece-query" style="display: none"></pre>
+                <pre id="default-query" style="display: none"></pre>
             </div>
         </div>
     </form>
