@@ -18,134 +18,86 @@
                     <option value="{{ op.id }}">{{ op.name }} - {{ op.start }}</option>
                 {% endfor %}
              </select>
+             <p id="red-status" class="status" style="display: None"></p>
             <select id="blue-operations" onchange="refresh()">
                 <option value="" disabled selected>Select a blue operation</option>
                 {% for op in blue_ops %}
                     <option value="{{ op.id }}">{{ op.name }} - {{ op.start }}</option>
                 {% endfor %}
              </select>
+            <p id="blue-status" class="status" style="display: None"></p>
             <br>
+            <button class="button-success button-atomic" onclick="refresh()">Refresh</button>
         </div>
-        <div class="column" style="flex:75%;padding:15px;text-align: left">
-            <center>
-                <div class="scoreboard-row">
-                  <div class="scoreboard-column">
-                      <h3 id="gb-red-state"></h3>
-                      <div class="scoreboard-points scoreboard-red">
-                          <p id="gb-red-points"></p>
-                          <p style="font-size:12px;margin-top: -40px">points</p>
-                      </div>
+        <div id="the-gameboard" class="column">
+            <div class="gameboard-row scoreboard">
+              <div class="gameboard-column">
+                  <div class="scoreboard-points scoreboard-red">
+                      <p id="gb-red-points">0</p>
+                      <p style="font-size:12px;margin-top: -40px">points</p>
                   </div>
-                  <div class="scoreboard-column">
-                      <h3 id="gb-blue-state"></h3>
-                      <div class="scoreboard-points scoreboard-blue">
-                          <p id="gb-blue-points"></p>
-                          <p style="font-size:12px;margin-top: -40px">points</p>
-                      </div>
+              </div>
+              <div class="gameboard-column mid">
+                  <h3>Process</h3>
+              </div>
+              <div class="gameboard-column">
+                  <div class="scoreboard-points scoreboard-blue">
+                      <p id="gb-blue-points">0</p>
+                      <p style="font-size:12px;margin-top: -40px">points</p>
                   </div>
-                </div>
-                <ul id="the-gameboard" class="gameboard">
-                  <li id="game-piece-0">
-                </ul>
-            </center>
+              </div>
+            </div>
+            <div id="exchanges" style="margin: 10px 0px;"></div>
         </div>
     </div>
 </div>
 
-<li id="game-piece" style="display: none">
-    <div class="gameboard-piece">
-        <p id="gp-entry"></p>
-    </div>
-</li>
+<div id="exchange" class="gameboard-row" style="display:none;">
+  <div class="gameboard-column red"></div>
+  <div class="gameboard-column mid">
+      <span class="gp-pid"></span>
+      <span class="gp-host"></span>
+  </div>
+  <div class="gameboard-column blue"></div>
+</div>
+<div id="red-wrapper" class="gp-wrapper" style="display:none"></div>
+<div id="blue-wrapper" class="gp-wrapper" style="display:none"></div>
+<div id="red-piece" class="gameboard-column gp-red" style="display:none">
+    <span class="golden-goose"><span></span></span>
+    <span class="gp-ability"></span>
+    <span class="gp-time"></span>
+    <span class="gp-agent"></span>
+</div>
+<div id="blue-piece" class="gameboard-column gp-blue" style="display:none">
+    <span class="golden-goose"><span></span></span>
+    <span class="gp-ability"></span>
+    <span class="gp-time"></span>
+    <span class="gp-agent"></span>
+</div>
+<div id="cover-piece" class="gameboard-column gp-cover" style="display:none">
+    <span class="gp-reveal">Click to Reveal</span>
+</div>
 
-<script>
-    let refresher = setInterval(refresh, 10000);
-    $('.section-profile').bind('destroyed', function() {
-        clearInterval(refresher);
-    });
-    $(document).ready(function () {
-        let redOps = $('#red-operations').children('option').length-1;
-        let blueOps = $('#blue-operations').children('option').length-1;
-        if(redOps===0 && blueOps===0) {
-            stream('GameBoard is only useful if a red or blue operation has been started.')
-        } else {
-            stream('Select red/blue operations to see what the defense detected and responded to.');
-        }
-    });
+<div id="piece-modal" class="modal">
+    <form class="modal-content ability-viewer">
+        <div class="imgcontainer">
+          <span onclick="resetPieceModal();" class="close" title="Close Modal">&times;</span>
+        </div>
+        <div class="container" style="text-align:left">
+            <p>Command Run</p>
+            <code id="piece-cmd"></code>
+            <hr>
+            <p>New Facts Found</p>
+            <div id="piece-fact-list">
+                <pre id="default-fact" style="display: none"></pre>
+            </div>
+            <hr>
+            <p>Suggested Queries</p>
+            <div id="piece-queries">
+                <pre id="default-query" style="display: none"></pre>
+            </div>
+        </div>
+    </form>
+</div>
 
-    function refresh(){
-        function draw(data){
-            let spacing = '&nbsp;&nbsp;-&nbsp;&nbsp;';
-            $('#the-gameboard li').not('li:first').remove();
-            $('#gb-red-state').text(data.red_state);
-            $('#gb-blue-state').text(data.blue_state);
-
-            let links = data.links;
-            let bluePoints = 0;
-            let redPoints = 0;
-            for(let i=0; i<links.length; i++){
-                if(links[i].cleanup) {
-                    continue;
-                }
-                let piece = $("#game-piece").clone();
-                if(links[i].ability.access === 1) {
-                    piece.addClass('gp-red');
-                    redPoints += handOutRedPoints(links[i]);
-                } else if (links[i].ability.access === 2) {
-                    piece.addClass('gp-blue');
-                    bluePoints += handOutBluePoints(links[i]);
-                }
-                piece.attr("id", "link_id_" + links[i].id);
-                piece.find('#gp-entry').html('<span class="gp-number">'+(i+1)+'</span>'+spacing+'<span style="font-size:12px;">' + links[i].finish + '</span>' +
-                    spacing + '<b>'+links[i].host+'</b>' + spacing + links[i].ability.name+ '<span id="golden-goose" style="float:right;padding-right:10px;"></span>');
-                if(links[i].facts.length > 0){
-                    piece.find('#golden-goose').html('&#11088;');
-                }
-                piece.insertAfter("#game-piece-0");
-                piece.show();
-            }
-            $('#gb-blue-points').text(bluePoints);
-            $('#gb-red-points').text(redPoints);
-        }
-        let redOpId = parseInt($('#red-operations option:selected').attr('value'));
-        let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
-        stream('Gold stars mean information was learned to help the team.');
-        restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
-    }
-
-    function handOutBluePoints(link) {
-        let points = 0;
-        if(link.ability.tactic === 'response') {
-            points += 2;
-        }
-        return points;
-    }
-
-    function handOutRedPoints(link){
-        let points = 0;
-        if(link.status !== 0) {
-            points -= 1;
-            return points;
-        }
-        if(link.ability.tactic === 'credential-access') {
-            points += 3;
-        } else if(link.ability.tactic === 'collection') {
-            points += 2;
-        } else if (link.ability.tactic === 'impact') {
-            points +=3;
-        } else if (link.ability.tactic === 'lateral-movement') {
-            points +=5;
-        } else if (link.ability.tactic === 'exfiltration') {
-            points +=3;
-        } else if (link.ability.tactic === 'defense-evasion') {
-            points +=4;
-        } else if (link.ability.tactic === 'persistence') {
-            points +=6;
-        } else if (link.ability.tactic === 'privilege-escalation') {
-            points +=3;
-        } else {
-            points += 1;
-        }
-        return points;
-    }
-</script>
+<script src="/gameboard/js/gameboard.js"></script>
