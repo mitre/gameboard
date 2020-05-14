@@ -63,10 +63,10 @@ class GameboardApi(BaseService):
         return exchanges
 
     def _find_original_pid(self, relationships, trait, value):
-        r_source = next((r.source for r in relationships if r.target == (trait, value)), None)
+        r_source = next((r.source for r in relationships if (r.target.trait == trait and r.target.value == value)), None)
         if r_source:
-            if r_source[0] == self.PID_FACT:
-                return int(r_source[1])
+            if r_source.trait == self.PID_FACT:
+                return int(r_source.value)
             return self._find_original_pid(relationships, r_source.trait, r_source.value)
         return 0
 
