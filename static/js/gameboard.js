@@ -192,13 +192,18 @@ function getLinkInfo(exchanges, result) {
     $('#piece-cmd').html(atob(link['command']));
     let factList = $('#piece-fact-list');
     link['facts'].forEach(function(fact) {
-        let pieceFact = $('#default-fact').clone();
-        pieceFact.removeAttr('id');
-        pieceFact.addClass('piece-fact');
-        pieceFact.html(fact.trait + ': ' + fact.value);
-        pieceFact.show();
+        let pieceFact = divClone('#default-fact', 'piece-fact', fact.trait + ': ' + fact.value);
         factList.append(pieceFact);
     })
+    if (id[2] == 'blue') {
+        $('#facts-found').show();
+        $('#suggested-queries').hide();
+    }
+    else {
+        $('#facts-found').hide();
+        $('#suggested-queries').show();
+        addSuggestedQueries(link);
+    }
 }
 
 function findExchange(exchanges, pid) {
@@ -253,4 +258,45 @@ function resetPieceModal() {
     $('#piece-cmd').empty();
     $('#piece-fact-list').find('.piece-fact').remove();
     $('#piece-queries').find('.piece-query').remove();
+    $('#piece-queries').find('.piece-query-type').remove();
+}
+
+function addSuggestedQueries(link) {
+    let queries = generateQueries(link);
+    for (var key in queries) {
+        let pieceQueryType = divClone('#default-query-type', 'piece-query-type', key);
+        $('#piece-queries').append(pieceQueryType);
+
+        queries[key].forEach(function(query) {
+            let pieceQuery = divClone('#default-query', 'piece-query', query);
+            $('#piece-queries').append(pieceQuery);
+        })
+    }
+}
+
+function divClone(idToClone, divClass, htmlContent) {
+    let cloned = $(idToClone).clone();
+    cloned.removeAttr('id');
+    cloned.addClass(divClass);
+    cloned.html(htmlContent);
+    cloned.show();
+    return cloned;
+}
+
+function generateQueries(link) {
+    var queries = {};
+    queries['Splunk'] = generateSplunkQueries(link);
+    queries['Kibana'] = generateKibanaQueries(link);
+    return queries;
+}
+
+function generateSplunkQueries(link) {
+    splunkQueries = []
+    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" process_id=' + link.pid + ' | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="' + atob(link.command) + '" | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    return splunkQueries
+}
+
+function generateKibanaQueries(link) {
+    return ['event_data.processid: ' + link.pid];
 }

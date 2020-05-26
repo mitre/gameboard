@@ -86,17 +86,22 @@
           <span onclick="resetPieceModal();" class="close" title="Close Modal">&times;</span>
         </div>
         <div class="container" style="text-align:left">
-            <p>Command Run</p>
-            <code id="piece-cmd"></code>
-            <hr>
-            <p>New Facts Found</p>
-            <div id="piece-fact-list">
-                <pre id="default-fact" style="display: none"></pre>
+            <h4>Command Run</h4>
+            <pre id="piece-cmd"></pre>
+            <div id="facts-found">
+                <hr>
+                <h4>New Facts Found</h4>
+                <div id="piece-fact-list">
+                    <pre id="default-fact" style="display: none"></pre>
+                </div>
             </div>
-            <hr>
-            <p>Suggested Queries</p>
-            <div id="piece-queries">
-                <pre id="default-query" style="display: none"></pre>
+            <div id="suggested-queries">
+                <hr>
+                <h4>Suggested Queries</h4>
+                <div id="piece-queries">
+                    <p id="default-query-type" style="display:none"></p>
+                    <pre id="default-query" style="display: none"></pre>
+                </div>
             </div>
         </div>
     </form>
