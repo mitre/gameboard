@@ -12,14 +12,14 @@ function refresh(){
     function draw(data){
         $('#the-gameboard .gameboard-row').not(':first').remove();
 
-        let redOp = data.red_op;
-        let blueOp = data.blue_op;
+        let redOpState = data.red_op_state;
+        let blueOpState = data.blue_op_state;
         let exchanges = data.exchanges;
         let access = data.access;
 
-        updateOpState('red', redOp)
-        updateOpState('blue', blueOp);
-        updatePoints(exchanges);
+        updateOpState('red', redOpState)
+        updateOpState('blue', blueOpState);
+        updatePoints(data.points);
         updateExchanges(exchanges, access);
 
         $('.golden-goose').on('click', function () { getLinkInfo(exchanges, $(this)) })
@@ -39,82 +39,22 @@ function refresh(){
     restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
 }
 
-function updateOpState(opType, op) {
-    if (op) {
+function updateOpState(opType, opState) {
+    if (opState) {
         let status = $('#' + opType + '-status');
-        if (op.state == 'running') {
+        if (opState == 'running') {
             status.css('background-color', 'darkgoldenrod');
         }
-        if (op.state == 'finished') {
+        if (opState == 'finished') {
             status.css('background-color', 'green');
         }
-        status.html(op.state).show();
+        status.html(opState).show();
     }
 }
 
-function updatePoints(exchanges) {
-    function handOutPoints(opType, links) {
-        let points = 0;
-        links.forEach(function(link) {
-            if(opType == 'red') {
-                points += handOutRedPoints(link);
-            }
-            else {
-                points += handOutBluePoints(link);
-            }
-        })
-        return points;
-    }
-
-    let redPoints = 0;
-    let bluePoints = 0;
-    exchanges.forEach(function(exchange) {
-        let links = exchange[1];
-        redPoints += handOutPoints('red', links['red']);
-        bluePoints += handOutPoints('blue', links['blue']);
-    })
-    $('#gb-blue-points').text(bluePoints);
-    $('#gb-red-points').text(redPoints);
-}
-
-function handOutBluePoints(link) {
-    let points = 0;
-    if(link.facts.length == 0) {
-        points -= 1;
-        return points;
-    }
-    if(link.ability.tactic === 'response') {
-        points += 2;
-    }
-    return points;
-}
-
-function handOutRedPoints(link){
-    let points = 0;
-    if(link.status !== 0) {
-        points -= 1;
-        return points;
-    }
-    if(link.ability.tactic === 'credential-access') {
-        points += 3;
-    } else if(link.ability.tactic === 'collection') {
-        points += 2;
-    } else if (link.ability.tactic === 'impact') {
-        points +=3;
-    } else if (link.ability.tactic === 'lateral-movement') {
-        points +=5;
-    } else if (link.ability.tactic === 'exfiltration') {
-        points +=3;
-    } else if (link.ability.tactic === 'defense-evasion') {
-        points +=4;
-    } else if (link.ability.tactic === 'persistence') {
-        points +=6;
-    } else if (link.ability.tactic === 'privilege-escalation') {
-        points +=3;
-    } else {
-        points += 1;
-    }
-    return points;
+function updatePoints(points) {
+    $('#gb-red-points').text(points[0]);
+    $('#gb-blue-points').text(points[1]);
 }
 
 function updateExchanges(exchanges, access) {
