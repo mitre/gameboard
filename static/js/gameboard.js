@@ -140,6 +140,8 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
     for (let i=0; i<links.length;i++) {
         let coverPiece = $('#cover-piece').clone();
         coverPiece.attr('id', 'cover-' + pid + '-' + opType + '-' + i);
+        coverPiece.find('.gp-ability').html(links[i].ability.name);
+        coverPiece.find('.gp-tid').html(links[i].ability.technique_id)
         coverPiece.css('transform','rotateY(180deg)');
         coverPiece.css('display', 'flex');
 

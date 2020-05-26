@@ -109,15 +109,13 @@
     backface-visibility: hidden;
 
 }
-.gp-reveal {
-    position: relative;
-    top: 32%;
-}
 .gp-ability {
     padding-bottom: 5px;
 }
 .gp-time,
-.gp-agent {
+.gp-agent,
+.gp-tid,
+.gp-reveal {
     font-size: 12px;
 }
 .gp-pid {
