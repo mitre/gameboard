@@ -295,8 +295,12 @@ function generateSplunkQueries(link) {
     let earliest = incrementTime(link.finish, -5);
     let latest = incrementTime(link.finish, 5);
 
-    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" process_id=' + link.pid + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
-    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="' + atob(link.command) + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" ProcessId=' + link.pid + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="*' + atob(link.command).split(' ')[0] + '*" earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    if (link.ability.executor == 'psh') {
+        splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="*powershell*" earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    }
+
     return splunkQueries;
 }
 
@@ -307,12 +311,16 @@ function incrementTime(finishTime, increment) {
 }
 
 function formatSplunkTime(time) {
-    return time.getMonth() + '/' + time.getDate() + '/' + time.getFullYear() + ':' + time.toString().split(' ')[4]
+    let month = time.getMonth() + 1
+    return month + '/' + time.getDate() + '/' + time.getFullYear() + ':' + time.toString().split(' ')[4]
 }
 
 function generateELKQueries(link) {
     let elkQueries = [];
     elkQueries.push('event_data.processid: ' + link.pid);
-    elkQueries.push('event_data.CommandLine: "' + atob(link.command) + '"');
+    elkQueries.push('event_data.CommandLine: "' + atob(link.command).split(' ')[0] + '"');
+    if (link.ability.executor == 'psh') {
+        elkQueries.push('event_data.CommandLine: "*powershell*"');
+    }
     return elkQueries;
 }
