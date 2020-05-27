@@ -80,20 +80,27 @@ class GameboardApi(BaseService):
         red_points = 0
         blue_points = 0
         for exchange in exchanges.values():
-            for red_link in exchange[self.RED_TEAM]:
-                if blue_op:
-                    if len(exchange[self.BLUE_TEAM]) == 0:
-                        blue_points -= self._adjust_blue_points(red_link)
-                    else:
-                        continue
-                red_points += self._add_red_points(red_link)
-
-            for blue_link in exchange[self.BLUE_TEAM]:
-                if red_op and len(exchange[self.RED_TEAM]) == 0:
-                    blue_points -= 1
-                    continue
-                blue_points += self._add_blue_points(blue_link)
+            red_points, blue_points = self._calculate_red_links(blue_op, exchange, red_points, blue_points)
+            blue_points = self._calculate_blue_links(red_op, exchange, blue_points)
         return [red_points, blue_points]
+
+    def _calculate_red_links(self, blue_op, exchange, red_points, blue_points):
+        for red_link in exchange[self.RED_TEAM]:
+            if blue_op:
+                if len(exchange[self.BLUE_TEAM]) == 0:
+                    blue_points -= self._adjust_blue_points(red_link)
+                else:
+                    continue
+            red_points += self._add_red_points(red_link)
+        return red_points, blue_points
+
+    def _calculate_blue_links(self, red_op, exchange, blue_points):
+        for blue_link in exchange[self.BLUE_TEAM]:
+            if red_op and len(exchange[self.RED_TEAM]) == 0:
+                blue_points -= 1
+                continue
+            blue_points += self._add_blue_points(blue_link)
+        return blue_points
 
     @staticmethod
     def _add_red_points(red_link):
