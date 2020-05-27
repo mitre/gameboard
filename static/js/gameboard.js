@@ -286,17 +286,33 @@ function divClone(idToClone, divClass, htmlContent) {
 function generateQueries(link) {
     var queries = {};
     queries['Splunk'] = generateSplunkQueries(link);
-    queries['Kibana'] = generateKibanaQueries(link);
+    queries['ELK'] = generateELKQueries(link);
     return queries;
 }
 
 function generateSplunkQueries(link) {
-    splunkQueries = []
-    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" process_id=' + link.pid + ' | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
-    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="' + atob(link.command) + '" | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
-    return splunkQueries
+    let splunkQueries = [];
+    let earliest = incrementTime(link.finish, -5);
+    let latest = incrementTime(link.finish, 5);
+
+    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" process_id=' + link.pid + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="' + atob(link.command) + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, process_name, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
+    return splunkQueries;
 }
 
-function generateKibanaQueries(link) {
-    return ['event_data.processid: ' + link.pid];
+function incrementTime(finishTime, increment) {
+    let converted = new Date(finishTime);
+    converted.setSeconds(converted.getSeconds() + increment);
+    return formatSplunkTime(converted)
+}
+
+function formatSplunkTime(time) {
+    return time.getMonth() + '/' + time.getDate() + '/' + time.getFullYear() + ':' + time.toString().split(' ')[4]
+}
+
+function generateELKQueries(link) {
+    let elkQueries = [];
+    elkQueries.push('event_data.processid: ' + link.pid);
+    elkQueries.push('event_data.CommandLine: "' + atob(link.command) + '"');
+    return elkQueries;
 }
