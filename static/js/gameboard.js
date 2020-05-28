@@ -202,13 +202,11 @@ function getLinkInfo(exchanges, result) {
     })
     if (id[2] == 'blue') {
         $('#facts-found').show();
-        $('#suggested-queries').hide();
     }
     else {
         $('#facts-found').hide();
-        $('#suggested-queries').show();
-        addSuggestedQueries(link);
     }
+    addSuggestedQueries(link, id[2]);
 }
 
 function findExchange(exchanges, pid) {
@@ -266,8 +264,8 @@ function resetPieceModal() {
     $('#piece-queries').find('.piece-query-type').remove();
 }
 
-function addSuggestedQueries(link) {
-    let queries = generateQueries(link);
+function addSuggestedQueries(link, opType) {
+    let queries = generateQueries(link, opType);
     for (var key in queries) {
         let pieceQueryType = divClone('#default-query-type', 'piece-query-type', key);
         $('#piece-queries').append(pieceQueryType);
@@ -288,44 +286,55 @@ function divClone(idToClone, divClass, htmlContent) {
     return cloned;
 }
 
-function generateQueries(link) {
+function generateQueries(link, opType) {
+    function generateSpecific(field, value, finish) {
+        splunkQueries.push(generateSplunkQuery(field, value, finish));
+        elkQueries.push(generateELKQuery(field, value));
+    }
+
     var queries = {};
-    queries['Splunk'] = generateSplunkQueries(link);
-    queries['ELK'] = generateELKQueries(link);
+    var splunkQueries = [];
+    var elkQueries = [];
+    if (opType == 'blue') {
+        generateSpecific('ProcessId', link.pin, link.finish);
+        link['facts'].forEach(function(fact) {
+            if (fact.trait == 'host.process.guid') {
+                generateSpecific('ProcessGuid', '"{' + fact.value + '}"', link.finish);
+            }
+            if (fact.trait == 'host.process.recordid') {
+                generateSpecific('RecordNumber', fact.value, link.finish);
+            }
+        })
+    }
+    else {
+        generateSpecific('ProcessId', link.pid, link.finish);
+        generateSpecific('CommandLine', '"*' + atob(link.command).split(' ')[0] + '*"', link.finish);
+        if (link.ability.executor == 'psh') {
+            generateSpecific('CommandLine', '"*powershell*"', link.finish);
+        }
+    }
+    queries['Splunk'] = splunkQueries;
+    queries['ELK'] = elkQueries;
     return queries;
 }
 
-function generateSplunkQueries(link) {
-    let splunkQueries = [];
-    let earliest = incrementTime(link.finish, -5);
-    let latest = incrementTime(link.finish, 5);
-
-    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" ProcessId=' + link.pid + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
-    splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="*' + atob(link.command).split(' ')[0] + '*" earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
-    if (link.ability.executor == 'psh') {
-        splunkQueries.push('source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" CommandLine="*powershell*" earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time');
-    }
-
-    return splunkQueries;
+function generateSplunkQuery(field, value, finish) {
+    let earliest = incrementTime(finish, -5);
+    let latest = incrementTime(finish, 5);
+    return 'source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" ' + field + '=' + value + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time';
 }
 
 function incrementTime(finishTime, increment) {
     let converted = new Date(finishTime);
     converted.setSeconds(converted.getSeconds() + increment);
-    return formatSplunkTime(converted)
+    return formatSplunkTime(converted);
 }
 
 function formatSplunkTime(time) {
-    let month = time.getMonth() + 1
-    return month + '/' + time.getDate() + '/' + time.getFullYear() + ':' + time.toString().split(' ')[4]
+    let month = time.getMonth() + 1;
+    return month + '/' + time.getDate() + '/' + time.getFullYear() + ':' + time.toString().split(' ')[4];
 }
 
-function generateELKQueries(link) {
-    let elkQueries = [];
-    elkQueries.push('event_data.processid: ' + link.pid);
-    elkQueries.push('event_data.CommandLine: "' + atob(link.command).split(' ')[0] + '"');
-    if (link.ability.executor == 'psh') {
-        elkQueries.push('event_data.CommandLine: "*powershell*"');
-    }
-    return elkQueries;
+function generateELKQuery(field, value) {
+    return 'event_data.' + field + ': ' + value;
 }
