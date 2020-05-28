@@ -150,10 +150,15 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         gamePiece.find('.gp-ability').html(links[i].ability.name);
         gamePiece.find('.gp-time').html(links[i].finish);
         gamePiece.find('.gp-agent').html(links[i].paw);
+
+        let goldenGoose = gamePiece.find('.golden-goose');
         if (links[i].facts.length > 0) {
-            let goldenGoose = gamePiece.find('.golden-goose');
             goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
             goldenGoose.find('span').html('&#11088;');
+        }
+        else {
+            goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
+            goldenGoose.find('span').html('★');
         }
         gamePiece.css('display', 'flex');
 
