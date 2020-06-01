@@ -150,10 +150,15 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         gamePiece.find('.gp-ability').html(links[i].ability.name);
         gamePiece.find('.gp-time').html(links[i].finish);
         gamePiece.find('.gp-agent').html(links[i].paw);
+
+        let goldenGoose = gamePiece.find('.golden-goose');
         if (links[i].facts.length > 0) {
-            let goldenGoose = gamePiece.find('.golden-goose');
             goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
             goldenGoose.find('span').html('&#11088;');
+        }
+        else {
+            goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
+            goldenGoose.find('span').html('★');
         }
         gamePiece.css('display', 'flex');
 
@@ -192,13 +197,16 @@ function getLinkInfo(exchanges, result) {
     $('#piece-cmd').html(atob(link['command']));
     let factList = $('#piece-fact-list');
     link['facts'].forEach(function(fact) {
-        let pieceFact = $('#default-fact').clone();
-        pieceFact.removeAttr('id');
-        pieceFact.addClass('piece-fact');
-        pieceFact.html(fact.trait + ': ' + fact.value);
-        pieceFact.show();
+        let pieceFact = divClone('#default-fact', 'piece-fact', fact.trait + ': ' + fact.value);
         factList.append(pieceFact);
     })
+    if (id[2] == 'blue') {
+        $('#facts-found').show();
+    }
+    else {
+        $('#facts-found').hide();
+    }
+    addSuggestedQueries(link, id[2]);
 }
 
 function findExchange(exchanges, pid) {
@@ -253,4 +261,80 @@ function resetPieceModal() {
     $('#piece-cmd').empty();
     $('#piece-fact-list').find('.piece-fact').remove();
     $('#piece-queries').find('.piece-query').remove();
+    $('#piece-queries').find('.piece-query-type').remove();
+}
+
+function addSuggestedQueries(link, opType) {
+    let queries = generateQueries(link, opType);
+    for (var key in queries) {
+        let pieceQueryType = divClone('#default-query-type', 'piece-query-type', key);
+        $('#piece-queries').append(pieceQueryType);
+
+        queries[key].forEach(function(query) {
+            let pieceQuery = divClone('#default-query', 'piece-query', query);
+            $('#piece-queries').append(pieceQuery);
+        })
+    }
+}
+
+function divClone(idToClone, divClass, htmlContent) {
+    let cloned = $(idToClone).clone();
+    cloned.removeAttr('id');
+    cloned.addClass(divClass);
+    cloned.html(htmlContent);
+    cloned.show();
+    return cloned;
+}
+
+function generateQueries(link, opType) {
+    function generateSpecific(field, value, finish) {
+        splunkQueries.push(generateSplunkQuery(field, value, finish));
+        elkQueries.push(generateELKQuery(field, value));
+    }
+
+    var queries = {};
+    var splunkQueries = [];
+    var elkQueries = [];
+    if (opType == 'blue') {
+        generateSpecific('ProcessId', link.pin, link.finish);
+        link['facts'].forEach(function(fact) {
+            if (fact.trait == 'host.process.guid') {
+                generateSpecific('ProcessGuid', '"{' + fact.value + '}"', link.finish);
+            }
+            if (fact.trait == 'host.process.recordid') {
+                generateSpecific('RecordNumber', fact.value, link.finish);
+            }
+        })
+    }
+    else {
+        generateSpecific('ProcessId', link.pid, link.finish);
+        generateSpecific('CommandLine', '"*' + atob(link.command).split(' ')[0] + '*"', link.finish);
+        if (link.ability.executor == 'psh') {
+            generateSpecific('CommandLine', '"*powershell*"', link.finish);
+        }
+    }
+    queries['Splunk'] = splunkQueries;
+    queries['ELK'] = elkQueries;
+    return queries;
+}
+
+function generateSplunkQuery(field, value, finish) {
+    let earliest = incrementTime(finish, -5);
+    let latest = incrementTime(finish, 5);
+    return 'source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational" ' + field + '=' + value + ' earliest="' + earliest + '" latest="' + latest + '" | table _time, Image, ProcessId, CommandLine, ParentProcessId, ParentProcessGuid, ParentCommandLine, User, Computer | sort _time';
+}
+
+function incrementTime(finishTime, increment) {
+    let converted = new Date(finishTime);
+    converted.setSeconds(converted.getSeconds() + increment);
+    return formatSplunkTime(converted);
+}
+
+function formatSplunkTime(time) {
+    let month = time.getMonth() + 1;
+    return month + '/' + time.getDate() + '/' + time.getFullYear() + ':' + time.toString().split(' ')[4];
+}
+
+function generateELKQuery(field, value) {
+    return 'event_data.' + field + ': ' + value;
 }
