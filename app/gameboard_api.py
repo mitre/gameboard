@@ -11,6 +11,17 @@ class GameboardApi(BaseService):
     BLUE_TEAM = 'blue'
     PID_FACT = 'host.process.id'
     AUTOCOLLECT_NAME = 'Auto-Collect'
+    RED_POINT_MAPPING = {'collection': 2,
+                         'credential-access': 3,
+                         'defense-evasion': 4,
+                         'exfiltration': 3,
+                         'impact': 3,
+                         'lateral-movement': 5,
+                         'persistence': 6,
+                         'privilege-escalation': 3}
+    BLUE_POINT_MAPPING = {'detection': 2,
+                          'hunt': 3,
+                          'response': 3}
 
     def __init__(self, services):
         self.auth_svc = services.get('auth_svc')
@@ -80,59 +91,37 @@ class GameboardApi(BaseService):
         red_points = 0
         blue_points = 0
         for exchange in exchanges.values():
-            red_points, blue_points = self._calculate_red_links(blue_op, exchange, red_points, blue_points)
-            blue_points = self._calculate_blue_links(red_op, exchange, blue_points)
+            red_link_points = self._calc_red_link_points(blue_op, exchange)
+            red_points += red_link_points[0]
+            blue_points += red_link_points[1] + self._calc_blue_link_points(red_op, exchange)
         return [red_points, blue_points]
 
-    def _calculate_red_links(self, blue_op, exchange, red_points, blue_points):
+    def _calc_red_link_points(self, blue_op, exchange):
+        blue_points = red_points = 0
         for red_link in exchange[self.RED_TEAM]:
             if blue_op:
                 if len(exchange[self.BLUE_TEAM]) == 0:
                     blue_points -= self._adjust_blue_points(red_link)
                 else:
                     continue
-            red_points += self._add_red_points(red_link)
+            red_points += self._add_points(red_link, self.RED_POINT_MAPPING)
         return red_points, blue_points
 
-    def _calculate_blue_links(self, red_op, exchange, blue_points):
+    def _calc_blue_link_points(self, red_op, exchange):
+        blue_points = 0
         for blue_link in exchange[self.BLUE_TEAM]:
             if red_op and len(exchange[self.RED_TEAM]) == 0:
                 blue_points -= 1
                 continue
-            blue_points += self._add_blue_points(blue_link)
+            blue_points += self._add_points(blue_link, self.BLUE_POINT_MAPPING)
         return blue_points
 
     @staticmethod
-    def _add_red_points(red_link):
-        if red_link['status'] != 0:
+    def _add_points(link, mapping):
+        if link['status'] != 0:
             return 0
-        tactic = red_link['ability']['tactic']
-        if tactic == 'collection':
-            return 2
-        elif tactic == 'credential-access':
-            return 3
-        elif tactic == 'defense-evasion':
-            return 4
-        elif tactic == 'exfiltration':
-            return 3
-        elif tactic == 'impact':
-            return 3
-        elif tactic == 'lateral-movement':
-            return 5
-        elif tactic == 'persistence':
-            return 6
-        elif tactic == 'privilege-escalation':
-            return 3
-        else:
-            return 1
-
-    @staticmethod
-    def _add_blue_points(blue_link):
-        tactic = blue_link['ability']['tactic']
-        if tactic == 'detection':
-            return 2
-        else:
-            return 3
+        tactic = link['ability']['tactic']
+        return mapping.get(tactic, 1)
 
     @staticmethod
     def _adjust_blue_points(red_link):
