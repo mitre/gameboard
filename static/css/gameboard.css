@@ -153,17 +153,14 @@ p.status {
     backface-visibility: hidden;
 }
 h4 {
-    margin: 20px 0px;
+    margin: 20px 0px 0px 0px;
     font-family: var(--default-font);
-    font-size: 25px;
-    font-weight: 100;
+    font-size: 20px;
+    font-weight: normal;
     color: white;
 }
 hr {
     margin: 20px 0px;
-}
-pre:last-of-type {
-    margin: 0px 20px;
 }
 pre {
     margin: 10px 20px;
@@ -177,4 +174,55 @@ pre.piece-query, pre.piece-cmd {
 }
 p.piece-query-type {
     margin-bottom: 5px;
+}
+.collapsible {
+    border-radius: 4px;
+    background-color: grey;
+    padding: 15px 20px;
+    text-align: left;
+}
+.collapsible:hover {
+    background-color: rgb(100,100,100);
+}
+.collapsible:after {
+    content: '\2795'; /* Unicode character for "plus" sign (+) */
+    float: right;
+    font-size: 20px;
+    color: white;
+}
+.active {
+    border-radius: 4px 4px 0px 0px;
+    background-color: rgb(100,100,100);
+}
+.active:after {
+    content: '\2796'; /* Unicode character for "minus" sign (-) */
+    font-size: 20px;
+    color: white;
+}
+.collapsible-content {
+    border-radius: 0px 0px 4px 4px;
+    overflow: hidden;
+    padding: 10px;
+    background-color: rgba(50,50,50,50%);
+}
+input.pin {
+    margin: 10px 0px;
+    border-radius: 4px;
+    width: 10%;
+    padding: 10px;
+    background-color: rgb(50,50,50);
+    text-align: left;
+    color: white;
+}
+button.pin-save {
+    float:right;
+    width:20%;
+    margin-top:20px;
+    padding:0px;
+}
+.save-msg {
+    float: right;
+    margin: 25px;
+    font-size: 15px;
+    color: white;
 }

@@ -81,30 +81,55 @@
 </div>
 
 <div id="piece-modal" class="modal">
-    <form class="modal-content ability-viewer">
+    <div class="modal-content ability-viewer">
         <div class="imgcontainer">
           <span onclick="resetPieceModal();" class="close" title="Close Modal">&times;</span>
         </div>
-        <div class="container" style="text-align:left">
-            <h4>Command</h4>
-            <pre id="piece-cmd" class="piece-cmd"></pre>
+        <div class="container" style="text-align:left; padding: 10px 50px 100px;">
+            <div class="column" style="margin: 20px 0px;">
+                <table style="border-spacing:2px;width:100%;" rules="rows">
+                    <tbody>
+                        <tr>
+                            <td style="width: 10%;"><b>Link Unique:</b></td>
+                            <td>
+                                <div id="piece-id" style="padding: 10px 0px;"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 10%;"><b>Ability:</b></td>
+                            <td><div id="piece-ability" style="padding: 10px 0px;"></div></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 10%;"><b>Pinned PID:</b></td>
+                            <td>
+                                <input class="pin" type="text" id="piece-pin" placeholder="PID">
+                                <div style="padding: 10px 0px; display: none" id="piece-pid"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width:10%"><b>Command:</b></td>
+                            <td><pre id="piece-cmd" style="margin: 10px 0px;"></pre></td>
+                    </tr>
+                </tbody></table>
+            </div>
             <div id="facts-found">
-                <hr>
-                <h4>New Facts Found</h4>
-                <div id="piece-fact-list">
+                <h4 class="collapsible" id="facts-found-header">New Facts Found</h4>
+                <div class="collapsible-content" id="piece-fact-list" style="display: none">
                     <pre id="default-fact" style="display: none"></pre>
                 </div>
             </div>
             <div id="suggested-queries">
-                <hr>
-                <h4>Suggested Queries</h4>
-                <div id="piece-queries">
+                <h4 class="collapsible" id="suggested-queries-header">Suggested Queries</h4>
+                <div class="collapsible-content" id="piece-queries" style="display: none">
                     <p id="default-query-type" style="display:none"></p>
                     <pre id="default-query" style="display: none"></pre>
                 </div>
             </div>
+            <button class="button-success atomic-button pin-save" id="pin-save" onclick="savePin()">Save</button>
+            <div class="save-msg" id="save-pin-msg" style="display: none"></div>
+
         </div>
-    </form>
+    </div>
 </div>
 
 <script src="/gameboard/js/gameboard.js"></script>
