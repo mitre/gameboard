@@ -91,29 +91,30 @@ class GameboardApi(BaseService):
         red_points = 0
         blue_points = 0
         for exchange in exchanges.values():
-            red_link_points = self._calc_red_link_points(blue_op, exchange)
-            red_points += red_link_points[0]
-            blue_points += red_link_points[1] + self._calc_blue_link_points(red_op, exchange)
+            if red_op:
+                red_points += self._calc_red_points(blue_op, exchange)
+            if blue_op:
+                blue_points += self._calc_blue_points(red_op, exchange)
         return [red_points, blue_points]
 
-    def _calc_red_link_points(self, blue_op, exchange):
-        blue_points = red_points = 0
+    def _calc_red_points(self, blue_op, exchange):
+        red_points = 0
+        if blue_op and len(exchange[self.BLUE_TEAM]) != 0:
+            return red_points
         for red_link in exchange[self.RED_TEAM]:
-            if blue_op:
-                if len(exchange[self.BLUE_TEAM]) == 0:
-                    blue_points -= self._adjust_blue_points(red_link)
-                else:
-                    continue
             red_points += self._add_points(red_link, self.RED_POINT_MAPPING)
-        return red_points, blue_points
+        return red_points
 
-    def _calc_blue_link_points(self, red_op, exchange):
+    def _calc_blue_points(self, red_op, exchange):
         blue_points = 0
+        for red_link in exchange[self.RED_TEAM]:
+            if len(exchange[self.BLUE_TEAM]) == 0:
+                blue_points -= self._adjust_blue_points(red_link)
         for blue_link in exchange[self.BLUE_TEAM]:
             if red_op and len(exchange[self.RED_TEAM]) == 0:
                 blue_points -= 1
-                continue
-            blue_points += self._add_points(blue_link, self.BLUE_POINT_MAPPING)
+            else:
+                blue_points += self._add_points(blue_link, self.BLUE_POINT_MAPPING)
         return blue_points
 
     @staticmethod
