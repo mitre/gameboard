@@ -6,16 +6,9 @@ $(document).ready(function () {
     } else {
         stream('Select red/blue operations to see what the defense detected and responded to.');
     }
-    let factsHeader = document.getElementById('facts-found-header');
-    factsHeader.onclick = function(){
-        factsHeader.classList.toggle('active');
-        $('#piece-fact-list').slideToggle('slow');
-    };
-    let queriesHeader = document.getElementById('suggested-queries-header');
-    queriesHeader.onclick = function(){
-        queriesHeader.classList.toggle('active');
-        $('#piece-queries').slideToggle('slow');
-    };
+
+    addCollapsible('facts-found-header', '#piece-fact-list');
+    addCollapsible('suggested-queries-header', '#piece-queries');
 
 });
 
@@ -376,4 +369,12 @@ function savePin() {
     }
     let id = document.getElementById('piece-id');
     restRequest('PUT', {'link_id': id.innerHTML, 'updated_pin': pin.value}, updatedPin, '/plugin/gameboard/pin');
+}
+
+function addCollapsible(header, contents) {
+    let headerElem = document.getElementById(header);
+    headerElem.onclick = function(){
+        headerElem.classList.toggle('active');
+        $(contents).slideToggle('slow');
+    };
 }
