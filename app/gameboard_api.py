@@ -11,6 +11,17 @@ class GameboardApi(BaseService):
     BLUE_TEAM = 'blue'
     PID_FACT = 'host.process.id'
     AUTOCOLLECT_NAME = 'Auto-Collect'
+    RED_POINT_MAPPING = {'collection': 2,
+                         'credential-access': 3,
+                         'defense-evasion': 4,
+                         'exfiltration': 3,
+                         'impact': 3,
+                         'lateral-movement': 5,
+                         'persistence': 6,
+                         'privilege-escalation': 3}
+    BLUE_POINT_MAPPING = {'detection': 2,
+                          'hunt': 3,
+                          'response': 3}
 
     def __init__(self, services):
         self.auth_svc = services.get('auth_svc')
@@ -27,10 +38,12 @@ class GameboardApi(BaseService):
         red_op = await self.data_svc.locate('operations', dict(id=data.get(self.RED_TEAM)))
         blue_op = await self.data_svc.locate('operations', dict(id=data.get(self.BLUE_TEAM)))
         access = await self.auth_svc.get_permissions(request)
+        exchanges = self._get_exchanges(red_op, blue_op)
         response = dict(access=self.BLUE_TEAM if self.Access.BLUE in access else self.RED_TEAM,
-                        red_op=red_op[0].display if red_op else None,
-                        blue_op=blue_op[0].display if blue_op else None,
-                        exchanges=self._get_exchanges(red_op, blue_op))
+                        red_op_state=red_op[0].state if red_op else None,
+                        blue_op_state=blue_op[0].state if blue_op else None,
+                        exchanges=list(exchanges.items()),
+                        points=self._get_points(red_op, blue_op, exchanges))
         return web.json_response(response)
 
     def _get_exchanges(self, red_ops, blue_ops):
@@ -38,7 +51,7 @@ class GameboardApi(BaseService):
         self._set_pins(blue_ops)
         exchanges = self._add_links_to_exchange(exchanges, self._get_sorted_links(red_ops), team=self.RED_TEAM)
         exchanges = self._add_links_to_exchange(exchanges, self._get_sorted_links(blue_ops), team=self.BLUE_TEAM)
-        return list(exchanges.items())
+        return exchanges
 
     def _set_pins(self, blue_ops):
         if blue_ops and self.AUTOCOLLECT_NAME not in blue_ops[0].name:
@@ -73,3 +86,46 @@ class GameboardApi(BaseService):
     @staticmethod
     def _get_sorted_links(ops):
         return sorted([lnk for op in ops for lnk in op.chain if lnk.finish and lnk.cleanup == 0], key=lambda i: i.finish)
+
+    def _get_points(self, red_op, blue_op, exchanges):
+        red_points = 0
+        blue_points = 0
+        for exchange in exchanges.values():
+            if red_op:
+                red_points += self._calc_red_points(blue_op, exchange)
+            if blue_op:
+                blue_points += self._calc_blue_points(red_op, exchange)
+        return [red_points, blue_points]
+
+    def _calc_red_points(self, blue_op, exchange):
+        red_points = 0
+        if blue_op and len(exchange[self.BLUE_TEAM]) != 0:
+            return red_points
+        for red_link in exchange[self.RED_TEAM]:
+            red_points += self._add_points(red_link, self.RED_POINT_MAPPING)
+        return red_points
+
+    def _calc_blue_points(self, red_op, exchange):
+        blue_points = 0
+        for red_link in exchange[self.RED_TEAM]:
+            if len(exchange[self.BLUE_TEAM]) == 0:
+                blue_points -= self._adjust_blue_points(red_link)
+        for blue_link in exchange[self.BLUE_TEAM]:
+            if red_op and len(exchange[self.RED_TEAM]) == 0:
+                blue_points -= 1
+            else:
+                blue_points += self._add_points(blue_link, self.BLUE_POINT_MAPPING)
+        return blue_points
+
+    @staticmethod
+    def _add_points(link, mapping):
+        if link['status'] != 0:
+            return 0
+        tactic = link['ability']['tactic']
+        return mapping.get(tactic, 1)
+
+    @staticmethod
+    def _adjust_blue_points(red_link):
+        if red_link['visibility']['score'] >= 50:
+            return 2
+        return 1
