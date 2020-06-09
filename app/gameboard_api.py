@@ -26,6 +26,7 @@ class GameboardApi(BaseService):
     def __init__(self, services):
         self.auth_svc = services.get('auth_svc')
         self.data_svc = services.get('data_svc')
+        self.app_svc = services.get('app_svc')
 
     @template('gameboard.html')
     async def splash(self, request):
@@ -45,6 +46,12 @@ class GameboardApi(BaseService):
                         exchanges=list(exchanges.items()),
                         points=self._get_points(red_op, blue_op, exchanges))
         return web.json_response(response)
+
+    async def update_pin(self, request):
+        data = dict(await request.json())
+        link = await self.app_svc.find_link(data['link_id'])
+        link.pin = int(data['updated_pin'])
+        return web.json_response('completed')
 
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()

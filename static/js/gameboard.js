@@ -6,6 +6,10 @@ $(document).ready(function () {
     } else {
         stream('Select red/blue operations to see what the defense detected and responded to.');
     }
+
+    addCollapsible('facts-found-header', '#piece-fact-list');
+    addCollapsible('suggested-queries-header', '#piece-queries');
+
 });
 
 function refresh(){
@@ -134,6 +138,8 @@ function getLinkInfo(exchanges, result) {
     let exchange = findExchange(exchanges, id[1]);
     let link = exchange[id[2]][id[3]];
     document.getElementById('piece-modal').style.display='block';
+    $('#piece-id').html(link['id']);
+    $('#piece-ability').html(link['ability']['name']);
     $('#piece-cmd').html(atob(link['command']));
     let factList = $('#piece-fact-list');
     link['facts'].forEach(function(fact) {
@@ -142,9 +148,17 @@ function getLinkInfo(exchanges, result) {
     })
     if (id[2] == 'blue') {
         $('#facts-found').show();
+        $('#piece-pin').val(link['pin']);
+        $('#piece-pin').show();
+        $('#piece-pid').hide();
+        $('#pin-save').show();
     }
     else {
         $('#facts-found').hide();
+        $('#piece-pin').hide();
+        $('#piece-pid').html(link['pid']);
+        $('#piece-pid').show();
+        $('#pin-save').hide();
     }
     addSuggestedQueries(link, id[2]);
 }
@@ -200,8 +214,13 @@ function resetPieceModal() {
     modal.hide();
     $('#piece-cmd').empty();
     $('#piece-fact-list').find('.piece-fact').remove();
+    $('#piece-fact-list').hide();
     $('#piece-queries').find('.piece-query').remove();
     $('#piece-queries').find('.piece-query-type').remove();
+    $('#piece-queries').hide();
+    $('#facts-found-header').removeClass('active');
+    $('#suggested-queries-header').removeClass('active');
+    stream("Be sure to refresh the gameboard to update links");
 }
 
 function addSuggestedQueries(link, opType) {
@@ -277,4 +296,25 @@ function formatSplunkTime(time) {
 
 function generateELKQuery(field, value) {
     return 'event_data.' + field + ': ' + value;
+}
+
+function savePin() {
+    function updatedPin() {
+        $('#save-pin-msg').text('Saved!').show().fadeOut(2000);
+    }
+    let pin = document.getElementById('piece-pin');
+    if (isNaN(pin.value)) {
+        $('#save-pin-msg').text('Input is not a number').show().fadeOut(2000);
+        return
+    }
+    let id = document.getElementById('piece-id');
+    restRequest('PUT', {'link_id': id.innerHTML, 'updated_pin': pin.value}, updatedPin, '/plugin/gameboard/pin');
+}
+
+function addCollapsible(header, contents) {
+    let headerElem = document.getElementById(header);
+    headerElem.onclick = function(){
+        headerElem.classList.toggle('active');
+        $(contents).slideToggle('slow');
+    };
 }
