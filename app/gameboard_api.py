@@ -40,11 +40,12 @@ class GameboardApi(BaseService):
         blue_op = await self.data_svc.locate('operations', dict(id=data.get(self.BLUE_TEAM)))
         access = await self.auth_svc.get_permissions(request)
         exchanges = self._get_exchanges(red_op, blue_op)
+        self._add_points_to_exchanges(red_op, blue_op, exchanges)
         response = dict(access=self.BLUE_TEAM if self.Access.BLUE in access else self.RED_TEAM,
                         red_op_state=red_op[0].state if red_op else None,
                         blue_op_state=blue_op[0].state if blue_op else None,
                         exchanges=list(exchanges.items()),
-                        points=self._get_points(red_op, blue_op, exchanges))
+                        points=self._total_points(exchanges))
         return web.json_response(response)
 
     async def update_pin(self, request):
@@ -56,8 +57,8 @@ class GameboardApi(BaseService):
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
         self._set_pins(blue_ops)
-        exchanges = self._add_links_to_exchange(exchanges, self._get_sorted_links(red_ops), team=self.RED_TEAM)
-        exchanges = self._add_links_to_exchange(exchanges, self._get_sorted_links(blue_ops), team=self.BLUE_TEAM)
+        exchanges = self._add_links_to_exchanges(exchanges, self._get_sorted_links(red_ops), team=self.RED_TEAM)
+        exchanges = self._add_links_to_exchanges(exchanges, self._get_sorted_links(blue_ops), team=self.BLUE_TEAM)
         return exchanges
 
     def _set_pins(self, blue_ops):
@@ -70,7 +71,7 @@ class GameboardApi(BaseService):
                     else:
                         lnk.pin = self._find_original_pid(blue_ops[0].all_relationships(), fact.trait, fact.value)
 
-    def _add_links_to_exchange(self, exchanges, links, team):
+    def _add_links_to_exchanges(self, exchanges, links, team):
         for link in links:
             key = link.pid if team == self.RED_TEAM else link.pin
             if key in exchanges.keys():
@@ -94,35 +95,44 @@ class GameboardApi(BaseService):
     def _get_sorted_links(ops):
         return sorted([lnk for op in ops for lnk in op.chain if lnk.finish and lnk.cleanup == 0], key=lambda i: i.finish)
 
-    def _get_points(self, red_op, blue_op, exchanges):
+    def _add_points_to_exchanges(self, red_op, blue_op, exchanges):
+        for exchange in exchanges.values():
+            if red_op:
+                self._calc_red_points(blue_op, exchange)
+            if blue_op:
+                self._calc_blue_points(red_op, exchange)
+
+    def _calc_red_points(self, blue_op, exchange):
+        blue_detected = blue_op and len(exchange[self.BLUE_TEAM]) != 0
+
+        for red_link in exchange[self.RED_TEAM]:
+            if blue_detected:
+                red_link['points'] = 0
+            else:
+                red_link['points'] = self._add_points(red_link, self.RED_POINT_MAPPING)
+
+    def _calc_blue_points(self, red_op, exchange):
+        for blue_link in exchange[self.BLUE_TEAM]:
+            if red_op and len(exchange[self.RED_TEAM]) == 0:
+                blue_link['points'] = -1
+            else:
+                blue_link['points'] = self._add_points(blue_link, self.BLUE_POINT_MAPPING)
+
+        if len(exchange[self.BLUE_TEAM]) == 0:
+            blue_points = 0
+            for red_link in exchange[self.RED_TEAM]:
+                blue_points -= self._adjust_blue_points(red_link)
+            exchange[self.BLUE_TEAM].append(dict(points=blue_points))
+
+    def _total_points(self, exchanges):
         red_points = 0
         blue_points = 0
         for exchange in exchanges.values():
-            if red_op:
-                red_points += self._calc_red_points(blue_op, exchange)
-            if blue_op:
-                blue_points += self._calc_blue_points(red_op, exchange)
+            for link in exchange.get(self.RED_TEAM, []):
+                red_points += link.get('points', 0)
+            for link in exchange.get(self.BLUE_TEAM, []):
+                blue_points += link.get('points', 0)
         return [red_points, blue_points]
-
-    def _calc_red_points(self, blue_op, exchange):
-        red_points = 0
-        if blue_op and len(exchange[self.BLUE_TEAM]) != 0:
-            return red_points
-        for red_link in exchange[self.RED_TEAM]:
-            red_points += self._add_points(red_link, self.RED_POINT_MAPPING)
-        return red_points
-
-    def _calc_blue_points(self, red_op, exchange):
-        blue_points = 0
-        for red_link in exchange[self.RED_TEAM]:
-            if len(exchange[self.BLUE_TEAM]) == 0:
-                blue_points -= self._adjust_blue_points(red_link)
-        for blue_link in exchange[self.BLUE_TEAM]:
-            if red_op and len(exchange[self.RED_TEAM]) == 0:
-                blue_points -= 1
-            else:
-                blue_points += self._add_points(blue_link, self.BLUE_POINT_MAPPING)
-        return blue_points
 
     @staticmethod
     def _add_points(link, mapping):

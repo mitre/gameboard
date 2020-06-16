@@ -82,6 +82,27 @@ function updateExchanges(exchanges, access) {
 
 function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
     for (let i=0; i<links.length;i++) {
+        let pointsPiece = $('#points-piece').clone();
+        pointsPiece.attr('id', 'piece-' + pid + '-' + opType + '-' + i + '-points');
+        let points = links[i].points;
+        if (points > 0) {
+            pointsPiece.html('+' + points.toString());
+        }
+        else if (points < 0) {
+            pointsPiece.html(points.toString());
+        }
+
+        if (points !== 0) {
+            pointsPiece.addClass('points-' + opType);
+        }
+
+        let pointsColumn = exchangeElem.find('.' + opType + '.points-delta');
+        pointsColumn.append(pointsPiece);
+
+        if (links[i].ability === undefined) {
+            continue;
+        }
+
         let coverPiece = $('#cover-piece').clone();
         coverPiece.attr('id', 'cover-' + pid + '-' + opType + '-' + i);
         coverPiece.find('.gp-ability').html(links[i].ability.name);
@@ -112,7 +133,7 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         wrapper.append(gamePiece);
         wrapper.show();
 
-        let col = exchangeElem.find('.' + opType);
+        let col = exchangeElem.find('.' + opType + '.gp-link');
         col.append(wrapper);
 
         let mid = gamePiece.closest('.gameboard-row').find('.mid');
