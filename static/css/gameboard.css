@@ -69,14 +69,15 @@
     padding:5px;
 }
 
-.gp-wrapper {
+.gp-wrapper,
+.points-wrapper {
     position: relative;
 }
 
 .gp-red,
 .gp-blue,
 .gp-points {
-    position:relative;
+    position: relative;
     margin: 5px;
     border-radius: 4px;
     transform-style: preserve-3d;
@@ -87,6 +88,12 @@
 .gp-red,
 .gp-blue {
     min-width: 280px;
+}
+.gp-cover,
+.gp-red,
+.gp-blue,
+.gp-points {
+    min-height: 50px;
 }
 .gp-red {
     background-color: #750b20;
@@ -107,9 +114,15 @@
 .points-value {
     font-size: 24px;
 }
+.points-details {
+    font-size: 12px;
+    min-width: 82px;
+    width: 90%;
+    height: 70%;
+}
 
 .gp-cover {
-    position:absolute;
+    position: absolute;
     margin: 5px;
     border-radius: 4px;
     min-width: 280px;
@@ -120,7 +133,6 @@
     transition: transform 0.6s;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-
 }
 .gp-ability {
     padding-bottom: 5px;
@@ -152,6 +164,17 @@
 }
 .points-delta {
     flex: 1;
+}
+.points-cover {
+    position: absolute;
+    min-width: 82px;
+    margin: 5px;
+    width: 90%;
+    height: 70%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 p.status {
     float: right;

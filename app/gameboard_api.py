@@ -120,7 +120,8 @@ class GameboardApi(BaseService):
 
         if len(exchange[self.BLUE_TEAM]) == 0 and len(exchange[self.RED_TEAM]) > 0:
             for red_link in exchange[self.RED_TEAM]:
-                exchange[self.BLUE_TEAM].append(self._adjust_blue_points(red_link))
+                points_link = dict(points=self._adjust_blue_points(red_link))
+                exchange[self.BLUE_TEAM].append(points_link)
 
     def _total_points(self, exchanges):
         red_points = 0
