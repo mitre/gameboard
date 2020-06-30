@@ -78,6 +78,7 @@
 .gp-points {
     position:relative;
     margin: 5px;
+    border-radius: 4px;
     transform-style: preserve-3d;
     transition: transform 0.6s;
     -webkit-backface-visibility: hidden;
@@ -86,7 +87,6 @@
 .gp-red,
 .gp-blue {
     min-width: 280px;
-    border-radius: 4px;
 }
 .gp-red {
     background-color: #750b20;
@@ -97,13 +97,15 @@
 .gp-points {
     justify-content: center;
     flex: 1 !important;
-    border-radius: 20px;
 }
 .points-red {
     background-color: #750b20;
 }
 .points-blue {
     background-color: #191970;
+}
+.points-value {
+    font-size: 24px;
 }
 
 .gp-cover {

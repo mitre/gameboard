@@ -84,15 +84,19 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
     for (let i=0; i<links.length;i++) {
         let pointsPiece = $('#points-piece').clone();
         pointsPiece.attr('id', 'piece-' + pid + '-' + opType + '-' + i + '-points');
-        let points = links[i].points;
-        if (points > 0) {
-            pointsPiece.html('+' + points.toString());
+        let valueSpan = pointsPiece.find('.points-value');
+        let points_value = links[i].points.value;
+        let points_reason = links[i].points.reason;
+        if (points_value > 0) {
+            valueSpan.html('+' + points_value.toString());
+            valueSpan.attr('title', points_reason);
         }
-        else if (points < 0) {
-            pointsPiece.html(points.toString());
+        else if (points_value < 0) {
+            valueSpan.html(points_value.toString());
+            valueSpan.attr('title', points_reason);
         }
 
-        if (points !== 0) {
+        if (points_value !== 0) {
             pointsPiece.addClass('points-' + opType);
         }
 
