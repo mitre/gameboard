@@ -35,6 +35,8 @@ function refresh(){
             $('.gp-red').on('click', function() { flipGamePiece(access, $(this)) });
         }
         $('.gp-cover').on('click', function () { flipCoverPiece(access, $(this)) })
+        $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
+        $('.points-details').on('click', function () { flipPointsPiece($(this)) })
 
     }
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
@@ -82,6 +84,49 @@ function updateExchanges(exchanges, access) {
 
 function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
     for (let i=0; i<links.length;i++) {
+        let pointsPiece = $('#points-piece').clone();
+        let pointsDetails = $('#points-details').clone();
+        pointsPiece.attr('id', 'piece-' + pid + '-' + opType + '-' + i + '-points');
+        pointsPiece.css('transform','');
+        pointsPiece.css('display', 'flex');
+
+        pointsDetails.attr('id', 'piece-' + pid + '-' + opType + '-' + i + '-points-details');
+        pointsDetails.css('transform','rotateY(180deg)');
+        pointsDetails.css('display', 'flex');
+
+        let valueSpan = pointsPiece.find('.points-value');
+        let reasonSpan = pointsDetails.find('.points-reason');
+        let points_value = links[i].points.value;
+        let points_reason = links[i].points.reason;
+        if (points_value > 0) {
+            valueSpan.html('+' + points_value.toString());
+            valueSpan.attr('title', points_reason);
+            reasonSpan.html(points_reason);
+        }
+        else if (points_value < 0) {
+            valueSpan.html(points_value.toString());
+            valueSpan.attr('title', points_reason);
+            reasonSpan.html(points_reason);
+        }
+
+        if (points_value !== 0) {
+            pointsPiece.addClass('points-' + opType);
+            pointsDetails.addClass('points-' + opType);
+        }
+
+        let pointsColumn = exchangeElem.find('.' + opType + '.points-delta');
+
+        let pointsWrapper = $('#' + opType + '-wrapper').clone();
+        pointsWrapper.attr('id', 'wrapper-' + pid + '-' + opType + '-' + i + '-points');
+        pointsWrapper.append(pointsPiece);
+        pointsWrapper.append(pointsDetails);
+        pointsWrapper.show();
+        pointsColumn.append(pointsWrapper);
+
+        if (links[i].ability === undefined) {
+            continue;
+        }
+
         let coverPiece = $('#cover-piece').clone();
         coverPiece.attr('id', 'cover-' + pid + '-' + opType + '-' + i);
         coverPiece.find('.gp-ability').html(links[i].ability.name);
@@ -112,7 +157,7 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         wrapper.append(gamePiece);
         wrapper.show();
 
-        let col = exchangeElem.find('.' + opType);
+        let col = exchangeElem.find('.' + opType + '.gp-link');
         col.append(wrapper);
 
         let mid = gamePiece.closest('.gameboard-row').find('.mid');
@@ -195,7 +240,24 @@ function flipCoverPiece(access, cover) {
         cover.closest('.gp-wrapper').find('.gp-blue').css('transform', 'rotateY(180deg)');
         cover.closest('.gameboard-row').find('.mid').css('transform', 'rotateY(180deg)');
     }
+}
 
+function flipPointsPiece(piece) {
+    let sibling;
+    if (piece.hasClass('points-cover')) {
+        sibling = piece.siblings('.points-details');
+    }
+    else {
+        sibling = piece.siblings('.points-cover');
+    }
+
+    if (piece.css('transform') == 'none') {
+        piece.css('transform','rotateY(180deg)');
+        sibling.css('transform', '');
+    } else {
+        piece.css('transform','');
+        sibling.css('transform', 'rotateY(180deg)');
+    }
 }
 
 function transformMid(access, reference, transformation) {

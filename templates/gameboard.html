@@ -31,6 +31,7 @@
         </div>
         <div id="the-gameboard" class="column">
             <div class="gameboard-row scoreboard">
+              <div class="gameboard-column side"></div>
               <div class="gameboard-column">
                   <div class="scoreboard-points scoreboard-red">
                       <p id="gb-red-points">0</p>
@@ -46,6 +47,7 @@
                       <p style="font-size:12px;margin-top: -40px">points</p>
                   </div>
               </div>
+              <div class="gameboard-column side"></div>
             </div>
             <div id="exchanges" style="margin: 10px 0px;"></div>
         </div>
@@ -53,12 +55,14 @@
 </div>
 
 <div id="exchange" class="gameboard-row" style="display:none;">
-  <div class="gameboard-column red"></div>
+  <div class="gameboard-column red points-delta"></div>
+  <div class="gameboard-column red gp-link"></div>
   <div class="gameboard-column mid">
       <span class="gp-pid"></span>
       <span class="gp-host"></span>
   </div>
-  <div class="gameboard-column blue"></div>
+  <div class="gameboard-column blue gp-link"></div>
+  <div class="gameboard-column blue points-delta"></div>
 </div>
 <div id="red-wrapper" class="gp-wrapper" style="display:none"></div>
 <div id="blue-wrapper" class="gp-wrapper" style="display:none"></div>
@@ -78,6 +82,13 @@
     <span class="gp-ability"></span>
     <span class="gp-tid"></span>
     <span class="gp-reveal">Click to reveal more information</span>
+</div>
+<div id="points-wrapper" class="points-wrapper" style="display:none"></div>
+<div id="points-piece" class="gameboard-column gp-points points-cover" style="display:none">
+    <span class="points-value"></span>
+</div>
+<div id="points-details" class="gameboard-column gp-points points-details" style="display:none">
+    <span class="points-reason"></span>
 </div>
 
 <div id="piece-modal" class="modal">

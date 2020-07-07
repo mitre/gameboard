@@ -8,11 +8,11 @@
     display: flex;
     flex-direction: column;
     flex-basis: 100%;
-    flex: 2;
+    flex: 3;
     text-align: center;
 }
-.gameboard-column:nth-of-type(2) {
-    flex: 1;
+.gameboard-column:nth-of-type(3) {
+    flex: 2;
 }
 .gameboard-column h3 {
     text-transform: uppercase;
@@ -34,8 +34,11 @@
 .scoreboard {
     border: 0;
 }
+.scoreboard .side {
+    flex: 1;
+}
 .scoreboard-points {
-    width: 25%;
+    width: 34%;
     border-radius: 20px;
     margin-left: auto;
     margin-right: auto;
@@ -66,37 +69,60 @@
     padding:5px;
 }
 
-.gp-wrapper {
+.gp-wrapper,
+.points-wrapper {
     position: relative;
-
 }
 
-.gp-red {
-    position:relative;
+.gp-red,
+.gp-blue,
+.gp-points {
+    position: relative;
     margin: 5px;
     border-radius: 4px;
-    min-width: 280px;
-    background-color: #750b20;
     transform-style: preserve-3d;
     transition: transform 0.6s;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
-
+.gp-red,
 .gp-blue {
-    position:relative;
-    margin: 5px;
-    border-radius: 4px;
     min-width: 280px;
+}
+.gp-cover,
+.gp-red,
+.gp-blue,
+.gp-points {
+    min-height: 50px;
+}
+.gp-red {
+    background-color: #750b20;
+}
+.gp-blue {
     background-color: #191970;
-    transform-style: preserve-3d;
-    transition: transform 0.6s;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+}
+.gp-points {
+    justify-content: center;
+    flex: 1 !important;
+}
+.points-red {
+    background-color: #750b20;
+}
+.points-blue {
+    background-color: #191970;
+}
+.points-value {
+    font-size: 24px;
+}
+.points-details {
+    font-size: 12px;
+    min-width: 82px;
+    width: 90%;
+    height: 70%;
 }
 
 .gp-cover {
-    position:absolute;
+    position: absolute;
     margin: 5px;
     border-radius: 4px;
     min-width: 280px;
@@ -107,7 +133,6 @@
     transition: transform 0.6s;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-
 }
 .gp-ability {
     padding-bottom: 5px;
@@ -136,6 +161,20 @@
 }
 .gp-blue .golden-goose span {
     right: 0;
+}
+.points-delta {
+    flex: 1;
+}
+.points-cover {
+    position: absolute;
+    min-width: 82px;
+    margin: 5px;
+    width: 90%;
+    height: 70%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 p.status {
     float: right;
