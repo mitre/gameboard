@@ -383,3 +383,54 @@ function addCollapsible(header, contents) {
         $(contents).slideToggle('slow');
     };
 }
+
+$('#hidden-operations-header').click(function() {
+    if ($('#hidden-operations-contents').css('display') == 'none') {
+       $('#hidden-operations-header').text('- Create Hidden Operation');
+    } else {
+        $('#hidden-operations-header').text('+ Create Hidden Operation');
+    }
+    $('#hidden-operations-contents').slideToggle();
+});
+
+function handleHiddenStartAction() {
+    let data = {};
+    data['op_name'] = $('#hiddenOpName').val();
+    data['group'] = $('#hiddenOpGroup').val();
+    data['profile'] = $('#hiddenOpProfile').val();
+    restRequest('POST', data, handleHiddenStartActionCallback, '/plugin/gameboard/hidden');
+}
+
+function handleHiddenStartActionCallback(data) {
+    if (data.hidden_red_operation.length > 0) {
+        let op = data.hidden_red_operation[0];
+        if ($('#gameboard').find('#red-operations option[value="hidden"]').length == 0) {
+            $('#gameboard').find('#red-operations').append('<option value="hidden" disabled>Hidden operations</option>');
+        }
+        $('#gameboard').find('#red-operations').append('<option value="'+op.id+'">'+op.name+' - '+op.start+'</option>');
+        $('#gameboard').find('#hiddenOpReturnStatus').text('Hidden operation "'+op.name+'" created');
+    } else {
+        $('#gameboard').find('#hiddenOpReturnStatus').text('Hidden operation failed to create');
+    }
+    $('#gameboard').find('#hiddenOpReturnStatus').fadeIn();
+    setTimeout(function() {
+        $('#gameboard').find('#hiddenOpReturnStatus').fadeOut();
+    }, 3000);
+}
+
+function validateHiddenOpStart() {
+    let name = $('#gameboard').find('#hiddenOpName').val();
+    let group = $('#gameboard').find('#hiddenOpGroup').val();
+    let profile = $('#gameboard').find('#hiddenOpProfile').val();
+    if (name == null || name == "" || group == null || group == "" || profile == null || profile == "") {
+        $('#gameboard').find('#HdnOpBtn').css('opacity', 0.5);
+        $('#gameboard').find('#HdnOpBtn').attr('disabled', 'true');
+        $('#gameboard').find('#HdnOpBtn').removeClass('button-success');
+        $('#gameboard').find('#HdnOpBtn').addClass('button-notready');
+    } else {
+        $('#gameboard').find('#HdnOpBtn').css('opacity', 1);
+        $('#gameboard').find('#HdnOpBtn').removeAttr('disabled');
+        $('#gameboard').find('#HdnOpBtn').removeClass('button-notready');
+        $('#gameboard').find('#HdnOpBtn').addClass('button-success');
+    }
+}
