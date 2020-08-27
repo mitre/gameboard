@@ -149,6 +149,9 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
             goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
             goldenGoose.find('span').html('★');
         }
+        if (links[i].hasOwnProperty('hidden')){
+            gamePiece.css('background-color', 'rgba(255, 255, 255, 0.1)')
+        }
         gamePiece.css('display', 'flex');
 
         let wrapper = $('#' + opType + '-wrapper').clone();
@@ -163,7 +166,7 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         let mid = gamePiece.closest('.gameboard-row').find('.mid');
         mid.find('.gp-pid').html(pid);
         mid.find('.gp-host').html(links[i].host);
-        if (isHidden) {
+        if (isHidden && !(links[i].hasOwnProperty('hidden'))) {
             hidePieces(gamePiece, coverPiece);
         }
         else {
