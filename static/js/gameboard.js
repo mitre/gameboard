@@ -38,11 +38,30 @@ function refresh(){
         $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
 
+        //TODO: move the below section into if statement for hidden red ops only!!
+        let open_verify_modal = '<br><br><div id="open-verify-modal" onclick=openVerifyModal()>+ Add External Detection</div>'
+        if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
+            let new_row = $('#exchange').clone();
+            $(new_row).attr('id', 'empty-row');
+            $('#the-gameboard').find('#exchanges').append(new_row);
+        }
+        let last_row = $('#the-gameboard').find('#exchanges').find('.gameboard-row').last();
+        let blue_col = $(last_row).find('.gameboard-column.blue.gp-link').append(open_verify_modal);
+
     }
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
+    if ($('#red-operations option[value="hidden"]').length > 0 && $('#red-operations option:selected').index() > $('#red-operations option[value="hidden"]').index()) {
+        $('#blue-operations option:selected').prop('selected', false);
+        $('#blue-operations :nth-child(0)').prop('selected', true);
+        $('#blue-operations').prop('disabled', 'disabled');
+    } else {
+        $('#blue-operations').prop('disabled', false);
+    }
+
     let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
     stream('Gold stars mean information was learned to help the team.');
     restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
+    asdf;
 }
 
 function updateOpState(opType, opState) {
