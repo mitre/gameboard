@@ -39,7 +39,7 @@ function refresh(){
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
 
         //TODO: move the below section into if statement for hidden red ops only!!
-        let open_verify_modal = '<br><br><div id="open-verify-modal" onclick=openVerifyModal()>+ Add External Detection</div>'
+        let open_verify_modal = '<br><br><div id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
         if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
             let new_row = $('#exchange').clone();
             $(new_row).attr('id', 'empty-row');
@@ -61,7 +61,6 @@ function refresh(){
     let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
     stream('Gold stars mean information was learned to help the team.');
     restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
-    asdf;
 }
 
 function updateOpState(opType, opState) {

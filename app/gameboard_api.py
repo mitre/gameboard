@@ -27,6 +27,7 @@ class GameboardApi(BaseService):
         self.auth_svc = services.get('auth_svc')
         self.data_svc = services.get('data_svc')
         self.app_svc = services.get('app_svc')
+        self.gameboard_svc = services.get('gameboard_svc')
 
     @template('gameboard.html')
     async def splash(self, request):
@@ -47,7 +48,11 @@ class GameboardApi(BaseService):
     async def get_pieces(self, request):
         data = dict(await request.json())
         red_op = await self.data_svc.locate('operations', dict(id=data.get(self.RED_TEAM)))
-        blue_op = await self.data_svc.locate('operations', dict(id=data.get(self.BLUE_TEAM)))
+        if red_op[0].access == self.Access.HIDDEN:
+            blue_op = await self.data_svc.locate('operations',
+                                                 dict(id=red_op[0].name+self.gameboard_svc.blue_op_name_modifier))
+        else:
+            blue_op = await self.data_svc.locate('operations', dict(id=data.get(self.BLUE_TEAM)))
         hidden = True if red_op[0].access == self.Access.HIDDEN else False
         access = await self.auth_svc.get_permissions(request)
         exchanges = self._get_exchanges(red_op, blue_op, hidden)
@@ -65,6 +70,20 @@ class GameboardApi(BaseService):
         link = await self.app_svc.find_link(data['link_id'])
         link.pin = int(data['updated_pin'])
         return web.json_response('completed')
+
+    async def verify_detection(self, request):
+        data = dict(await request.json())
+        host = data.get('host')
+        technique_id = data.get('technique')
+        verify_type = data.get('verify')
+        verify_info = data.get('info')
+        op = None
+        message = None
+        verified = await self.gameboard_svc.does_verify_info_match_any_run_link(host, technique_id, verify_type,
+                                                                                verify_info)
+        if verified:
+            op, message = await self.gameboard_svc.add_detection(verify_type, verified)
+        return web.json_response(dict(verified=verified, red_operation=op, message=message))
 
     async def create_hidden_red_operation(self, request):
         data = dict(await request.json())
