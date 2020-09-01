@@ -50,7 +50,8 @@ class GameboardApi(BaseService):
         red_op = await self.data_svc.locate('operations', dict(id=data.get(self.RED_TEAM)))
         if red_op[0].access == self.Access.HIDDEN:
             blue_op = await self.data_svc.locate('operations',
-                                                 dict(id=red_op[0].name+self.gameboard_svc.blue_op_name_modifier))
+                                                 dict(name=red_op[0].name+'_'+str(red_op[0].id) +
+                                                      self.gameboard_svc.blue_op_name_modifier))
         else:
             blue_op = await self.data_svc.locate('operations', dict(id=data.get(self.BLUE_TEAM)))
         hidden = True if red_op[0].access == self.Access.HIDDEN else False
@@ -136,7 +137,8 @@ class GameboardApi(BaseService):
     def _add_hidden_link_to_exchanges(exchanges):
         hidden_link = dict(points=dict(value=1, reason='?'),
                            ability=dict(name='undetected', tactic='?', technique_id='?'),
-                           finish='?', paw='?', facts=[], host='?', status=0, hidden=True)
+                           finish='?', paw='?', facts=[], host='?', status=0, hidden=True,
+                           visibility=dict(adjustments=[], score=50))
         if 'undetected' in exchanges:
             exchanges['undetected']['red'].append(hidden_link)
         else:

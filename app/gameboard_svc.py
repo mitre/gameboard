@@ -34,11 +34,12 @@ class GameboardService(BaseService):
 
     async def add_detection(self, verify_type, link_id):
         op, link = await self._find_op_and_link(link_id)
-        blue_op = await self.data_svc.locate('operations', op.name + self.blue_op_name_modifier)
+        blue_op = await self.data_svc.locate('operations', dict(name=op.name+'_'+str(op.id)+self.blue_op_name_modifier))
         if not blue_op:
-            blue_op = await self._create_detection_operation(red_op_name=op.name)
+            blue_op = await self._create_detection_operation(red_op_name=op.name, red_op_id=op.id,
+                                                             red_op_access=op.access)
         if not self._detection_exists(blue_op[0], verify_type, link):
-            await self._add_detection_to_operation(op=blue_op, link_pid=link.pid, verify_type=verify_type)
+            await self._add_detection_to_operation(op=blue_op[0], link_pid=link.pid, verify_type=verify_type)
             return op.id, 'Detection successfully added for link in operation: ' + op.name
         return None, 'Detection already exists for link in operation: ' + op.name
 
@@ -78,15 +79,15 @@ class GameboardService(BaseService):
                 return rel.source.value
         return False
 
-    async def _create_detection_operation(self, red_op_name):
+    async def _create_detection_operation(self, red_op_name, red_op_id, red_op_access):
         planner = (await self.get_service('data_svc').locate('planners', match=dict(name='atomic')))[0]
         adversary_id = self.get_config(prop='adversary', name='gameboard')
         adversary = (await self.data_svc.locate('adversaries', match=dict(adversary_id=adversary_id)))[0]
         obj = (await self.data_svc.locate('objectives', match=dict(name='default')))[0]
         agent = Agent(0, 0, 0, paw='gameboard_detection')
-        detection_operation = Operation(name=red_op_name+self.blue_op_name_modifier, agents=[agent],
-                                        adversary=adversary, access=BaseService.Access.HIDDEN, planner=planner,
-                                        group='blue')
+        access = self.Access.BLUE if red_op_access == self.Access.RED else self.Access.HIDDEN
+        detection_operation = Operation(name=red_op_name+'_'+str(red_op_id)+self.blue_op_name_modifier, agents=[agent],
+                                        adversary=adversary, access=access, planner=planner, group='blue')
         detection_operation.objective = obj
         detection_operation.set_start_details()
         return [await self.data_svc.store(detection_operation)]
