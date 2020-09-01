@@ -137,7 +137,7 @@ class GameboardApi(BaseService):
     def _add_hidden_link_to_exchanges(exchanges):
         hidden_link = dict(points=dict(value=1, reason='?'),
                            ability=dict(name='undetected', tactic='?', technique_id='?'),
-                           finish='?', paw='?', facts=[], host='?', status=0, hidden=True,
+                           finish='', paw='', facts=[], host='', status=0, hidden=True,
                            visibility=dict(adjustments=[], score=50))
         if 'undetected' in exchanges:
             exchanges['undetected']['red'].append(hidden_link)

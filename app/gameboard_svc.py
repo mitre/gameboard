@@ -40,8 +40,8 @@ class GameboardService(BaseService):
                                                              red_op_access=op.access)
         if not self._detection_exists(blue_op[0], verify_type, link):
             await self._add_detection_to_operation(op=blue_op[0], link_pid=link.pid, verify_type=verify_type)
-            return op.id, 'Detection successfully added for link in operation: ' + op.name
-        return None, 'Detection already exists for link in operation: ' + op.name
+            return op.id, 'Detection successfully added for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
+        return None, 'Detection already exists for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
 
     """PRIVATE"""
 

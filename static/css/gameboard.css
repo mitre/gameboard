@@ -265,3 +265,12 @@ button.pin-save {
     font-size: 15px;
     color: white;
 }
+#open-verify-modal {
+    cursor: pointer;
+    margin: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+    background-color: cornflowerblue;
+    opacity: 0.8;
+    color: white;
+}

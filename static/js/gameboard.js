@@ -38,21 +38,21 @@ function refresh(){
         $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
 
-        //TODO: move the below section into if statement for hidden red ops only!!
-        let open_verify_modal = '<br><br><div id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
-        if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
-            let new_row = $('#exchange').clone();
-            $(new_row).attr('id', 'empty-row');
-            $('#the-gameboard').find('#exchanges').append(new_row);
+        if ($('#red-operations option[value="hidden"]').length > 0 && $('#red-operations option:selected').index() > $('#red-operations option[value="hidden"]').index()) {
+            let open_verify_modal = '<br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
+            if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
+                let new_row = $('#exchange').clone();
+                $(new_row).attr('id', 'empty-row');
+                $('#the-gameboard').find('#exchanges').append(new_row);
+            }
+            $('#the-gameboard').find('#exchanges').find('.gameboard-row').last().find('.gameboard-column.blue.gp-link').append(open_verify_modal);
         }
-        let last_row = $('#the-gameboard').find('#exchanges').find('.gameboard-row').last();
-        let blue_col = $(last_row).find('.gameboard-column.blue.gp-link').append(open_verify_modal);
 
     }
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
     if ($('#red-operations option[value="hidden"]').length > 0 && $('#red-operations option:selected').index() > $('#red-operations option[value="hidden"]').index()) {
         $('#blue-operations option:selected').prop('selected', false);
-        $('#blue-operations :nth-child(0)').prop('selected', true);
+        $('#blue-operations :nth-child(1)').prop('selected', true);
         $('#blue-operations').prop('disabled', 'disabled');
     } else {
         $('#blue-operations').prop('disabled', false);
@@ -427,6 +427,12 @@ function handleHiddenStartActionCallback(data) {
         }
         $('#gameboard').find('#red-operations').append('<option value="'+op.id+'">'+op.name+' - '+op.start+'</option>');
         $('#gameboard').find('#hiddenOpReturnStatus').text('Hidden operation "'+op.name+'" created');
+        $('#hiddenOpName').val('');
+        $('#hiddenOpGroup :nth-child(1)').prop('selected', true);
+        $('#hiddenOpProfile :nth-child(1)').prop('selected', true);
+        $('#gameboard').find('#HdnOpBtn').removeClass('button-success');
+        $('#gameboard').find('#HdnOpBtn').addClass('button-notready');
+
     } else {
         $('#gameboard').find('#hiddenOpReturnStatus').text('Hidden operation failed to create');
     }
@@ -450,5 +456,48 @@ function validateHiddenOpStart() {
         $('#gameboard').find('#HdnOpBtn').removeAttr('disabled');
         $('#gameboard').find('#HdnOpBtn').removeClass('button-notready');
         $('#gameboard').find('#HdnOpBtn').addClass('button-success');
+    }
+}
+
+function verifyPopulateTechniques(parentId, tactics_and_techniques) {
+    let parent = $('#'+parentId);
+    $(parent).find('#technique-select').empty().append("<option disabled='disabled' selected>Choose a technique</option>");
+    let tactic = $(parent).find('#tactic-select').val();
+    let techniques = tactics_and_techniques[tactic];
+    $.each(techniques, function(i) {
+        verifyAppendTechniqueToList(parentId, tactic, techniques[i]);
+    });
+    alphabetize_dropdown($(parent).find('#technique-select'));
+}
+
+function verifyAppendTechniqueToList(parentId, tactic, value) {
+    $('#'+parentId).find('#technique-select').append($("<option></option>")
+        .attr("value", value[0])
+        .data("technique", value[0])
+        .text(value[0] + ' | '+ value[1]));
+}
+
+function submitVerifyDetection(parentId) {
+    let parent = $('#'+parentId);
+    let data = {};
+    data['host'] = $(parent).find('#host-select').val();
+    data['technique'] = $(parent).find('#technique-select').val();
+    if ($(parent).find('#togBtnHunt').is(':checked')) {
+        data['verify'] = 'guid';
+    } else {
+        data['verify'] = 'pid';
+    }
+    data['info'] = $(parent).find('#pid-entry').val();
+    $(parent).find('#result-box').children().hide();
+    restRequest('POST', data, verifyDetectionCallback, '/plugin/gameboard/detection');
+}
+
+function verifyDetectionCallback(data) {
+    if (data['verified'] != false) {
+        $('#verify-detection-modal').find('#result-correct').find('.hunt-result-txt').text(data['message']);
+        $('#verify-detection-modal').find('#result-correct').fadeIn();
+        $('#gameboard').find('#red-operations option[value="' + data['red_operation'] + '"]').prop('selected', true).change();
+    } else {
+        $('#verify-detection-modal').find('#result-wrong').fadeIn();
     }
 }
