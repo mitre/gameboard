@@ -43,6 +43,13 @@ class GameboardService(BaseService):
             return op.id, 'Detection successfully added for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
         return None, 'Detection already exists for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
 
+    async def is_link_verified(self, verify_type, link_id):
+        op, link = await self._find_op_and_link(link_id)
+        blue_op = await self.data_svc.locate('operations', dict(name=op.name+'_'+str(op.id)+self.blue_op_name_modifier))
+        if blue_op and self._detection_exists(blue_op[0], verify_type, link):
+            return True
+        return False
+
     """PRIVATE"""
 
     async def _find_op_and_link(self, link_id):
