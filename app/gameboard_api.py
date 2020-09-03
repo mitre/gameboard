@@ -223,7 +223,7 @@ class GameboardApi(BaseService):
         hidden_ops = await self.data_svc.locate('operations', match=dict(access=self.Access.HIDDEN))
         hidden_red_ops = []
         for op in hidden_ops:
-            if op.group != 'blue':
+            if op.group and op.group != 'blue':
                 hidden_red_ops.append(op.display)
         return hidden_red_ops
 
