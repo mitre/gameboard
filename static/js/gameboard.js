@@ -501,3 +501,9 @@ function verifyDetectionCallback(data) {
         $('#verify-detection-modal').find('#result-wrong').fadeIn();
     }
 }
+
+$('#verify-detection-modal').find('#pid-entry').keyup(function(event) {
+    if (event.keyCode == 13) {
+        $('#verify-detection-modal').find('#submit-verify-detection').click();
+    }
+});
