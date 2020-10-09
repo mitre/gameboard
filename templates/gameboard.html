@@ -214,15 +214,19 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="width:10%">
-                                        <div class="toggle" style="margin-top:3px">
-                                        <label class="switch"><input type="checkbox" id="togBtnHunt">
-                                            <div class="slider round" style="background-color:black">
-                                                <span class="on" style="top:45%"><b style="font-size:16px">guid</b></span>
-                                                <span class="off" style="top:45%"><b style="font-size:16px">pid</b></span>
-                                            </div>
-                                        </label>
-                                    </div>
+                                    <td style="display:flex;border:none">
+                                        <div class="toggle" style="margin-top:3px; flex:90%">
+                                            <label class="switch"><input type="checkbox" id="togBtnHunt" >
+                                                <div class="slider round" style="background-color:black">
+                                                    <span class="on" style="top:45%"><b style="font-size:16px">guid</b></span>
+                                                    <span class="off" style="top:45%"><b style="font-size:16px">pid</b></span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div id="guid-select-duk-icon" class="duk-icon" style="flex:10%;margin-top:2px">
+                                            <img style="height:10px" src="/gui/img/duk.png">
+                                            <span id="guid-select-duk-text">In order to add a manual Sysmon GUID detection, a blue agent must have been running on the target system during the red operation.</span>
+                                        </div>
                                     </td>
                                     <td><input id="pid-entry" type="text" placeholder="Enter PID/GUID" style="width:99%;margin:5px;text-align:left;"></td>
                                 </tr>
@@ -253,3 +257,23 @@
 <script>
     var tactics_and_techniques = {{ tactics | tojson }};
 </script>
+
+<style>
+#guid-select-duk-icon #guid-select-duk-text {
+    visibility: hidden;
+    width: 400px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    font-size: 13px;
+    position: absolute;
+    z-index: 1;
+    bottom: 36%;
+    margin-left: -124px;
+}
+#guid-select-duk-icon:hover #guid-select-duk-text {
+    visibility: visible;
+}
+</style>
