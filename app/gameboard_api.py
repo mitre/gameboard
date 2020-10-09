@@ -223,10 +223,10 @@ class GameboardApi(BaseService):
         hidden_ops = await self.data_svc.locate('operations', match=dict(access=self.Access.HIDDEN))
         hidden_red_ops = []
         for op in hidden_ops:
-            if op.group and op.group != 'blue':
+            if op.agents and op.agents[0].access is self.Access.RED:
                 hidden_red_ops.append(op.display)
         return hidden_red_ops
 
     async def _construct_groups(self):
-        hosts = [h.display for h in await self.data_svc.locate('agents') if h.group != 'blue']
+        hosts = [h.display for h in await self.data_svc.locate('agents') if h.access is self.Access.RED]
         return sorted(list(set(([h['group'] for h in hosts]))))
