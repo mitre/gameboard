@@ -2,6 +2,8 @@ import glob
 import os
 
 from app.utility.base_world import BaseWorld
+from app.objects.c_ability import Ability
+from app.objects.c_adversary import Adversary
 from plugins.gameboard.app.gameboard_api import GameboardApi
 from plugins.gameboard.app.gameboard_svc import GameboardService
 
@@ -22,21 +24,24 @@ async def enable(services):
     app.router.add_route('POST', '/plugin/gameboard/hidden', gameboard_api.create_hidden_red_operation)
     app.router.add_route('POST', '/plugin/gameboard/detection', gameboard_api.verify_detection)
 
-
-async def expansion(services):
     data_svc = services.get('data_svc')
-    await _apply_hidden_access_to_loaded_files(data_svc)
+    await _add_manual_detection_abilities_and_adversary(data_svc)
 
 
-async def _apply_hidden_access_to_loaded_files(data_svc):
-    object_types = ['abilities', 'adversaries']
-    for obj_typ in object_types:
-        for filename in glob.iglob('plugins/gameboard/data/'+obj_typ+'/**/*.yml', recursive=True):
-            obj_id = os.path.splitext(os.path.basename(filename))[0]
-            if obj_typ == 'abilities':
-                match = dict(ability_id=obj_id)
-            else:
-                match = dict(adversary_id=obj_id)
-            objects = await data_svc.locate(obj_typ, match=match)
-            for obj in objects:
-                obj.access = BaseWorld.Access.HIDDEN
+async def _add_manual_detection_abilities_and_adversary(data_svc):
+    pid_ability = Ability(ability_id='4a9b51ba-1a0d-4128-a040-5535fd147dc3', tactic='verification', technique_id='x',
+                          technique='x', name='GameBoard Plugin Manual Detection - PID', test='Ow==',
+                          description='GameBoard plugin pid detection placeholder ability', platform='any',
+                          executor='any', access=BaseWorld.Access.HIDDEN)
+    guid_ability = Ability(ability_id='0df4d46e-e202-4b29-9a19-c2540982002d', tactic='verification', technique_id='x',
+                           technique='x', name='GameBoard Plugin Manual Detection - GUID', test='Ow==',
+                           description='GameBoard plugin guid detection placeholder ability', platform='any',
+                           executor='any', access=BaseWorld.Access.HIDDEN)
+    detection_adversary = Adversary(adversary_id='7d1794bb-d7ce-4fe8-bae0-6959fa0a0a48',
+                                    name='Gameboard Plugin Manual Detection Placeholder Adversary',
+                                    description='Empty adversary for gameboard manual detections operation',
+                                    atomic_ordering=['4a9b51ba-1a0d-4128-a040-5535fd147dc3',
+                                                     '0df4d46e-e202-4b29-9a19-c2540982002d'])
+    detection_adversary.access = BaseWorld.Access.HIDDEN
+    for obj in [pid_ability, guid_ability, detection_adversary]:
+        await data_svc.store(obj)
