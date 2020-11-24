@@ -17,12 +17,6 @@
                 {% for op in red_ops %}
                     <option value="{{ op.id }}">{{ op.name }} - {{ op.start }}</option>
                 {% endfor %}
-                {% if hidden_red_operations|length %}
-                    <option value="hidden" disabled>Hidden operations</option>
-                    {% for op in hidden_red_operations %}
-                        <option value="{{ op.id }}">{{ op.name }} - {{ op.start }}</option>
-                    {% endfor %}
-                {% endif %}
              </select>
              <p id="red-status" class="status" style="display: None"></p>
             <select id="blue-operations" onchange="refresh()">
@@ -35,29 +29,6 @@
             <br>
             <button class="button-success button-atomic" onclick="refresh()">Refresh</button>
             <br><br>
-            <div id="hidden-operations-wrapper" style="">
-                <p id="hidden-operations-header" style="color: white; font-size: 20px; margin:auto; cursor:pointer">+ Create Hidden Operation</p>
-                <div id="hidden-operations-contents" style="display:none">
-                    <div id="hidden-operations-add" style="margin:auto">
-                        <input id="hiddenOpName" class="hiddenOpInfo" placeholder="Operation name" onchange="validateHiddenOpStart()"/>
-                        <select id="hiddenOpGroup" class="hiddenOpInfo" style="text-align-last: center" onchange="validateHiddenOpStart()">
-                            <option value="" disabled selected>Select a group</option>
-                            {% for group in groups %}
-                                <option value="{{ group }}">{{ group }}</option>
-                            {% endfor %}
-                        </select>
-                        <select id="hiddenOpProfile" class="hiddenOpInfo queueOption" style="text-align-last: center" onchange="validateHiddenOpStart()">
-                            <option value="" disabled selected>No adversary chosen</option>
-                            {% for adv in adversaries %}
-                              <option id="qflow-{{ adv.adversary_id }}" value="{{ adv.adversary_id }}">{{ adv.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button id="HdnOpBtn" type="button" style="opacity:0.5" disabled="disabled" class="button-notready atomic-button" onclick="handleHiddenStartAction()">Start</button>
-                        <div id="hiddenOpReturnStatus" style="display:none"></div>
-                    </div>
-                    &nbsp
-                </div>
-            </div>
         </div>
         <div id="the-gameboard" class="column">
             <div class="gameboard-row scoreboard">

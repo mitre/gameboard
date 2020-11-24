@@ -37,26 +37,17 @@ function refresh(){
         $('.gp-cover').on('click', function () { flipCoverPiece(access, $(this)) })
         $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
-
-        if ($('#red-operations option[value="hidden"]').length > 0 && $('#red-operations option:selected').index() > $('#red-operations option[value="hidden"]').index()) {
-            let open_verify_modal = '<br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
-            if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
-                let new_row = $('#exchange').clone();
-                $(new_row).attr('id', 'empty-row');
-                $('#the-gameboard').find('#exchanges').append(new_row);
-            }
-            $('#the-gameboard').find('#exchanges').find('.gameboard-row').last().find('.gameboard-column.blue.gp-link').append(open_verify_modal);
-        }
-
     }
+
+    let open_verify_modal = '<br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
+    if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
+        let new_row = $('#exchange').clone();
+        $(new_row).attr('id', 'empty-row');
+        $('#the-gameboard').find('#exchanges').append(new_row);
+    }
+    $('#the-gameboard').find('#exchanges').find('.gameboard-row').last().find('.gameboard-column.blue.gp-link').append(open_verify_modal);
+
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
-    if ($('#red-operations option[value="hidden"]').length > 0 && $('#red-operations option:selected').index() > $('#red-operations option[value="hidden"]').index()) {
-        $('#blue-operations option:selected').prop('selected', false);
-        $('#blue-operations :nth-child(1)').prop('selected', true);
-        $('#blue-operations').prop('disabled', 'disabled');
-    } else {
-        $('#blue-operations').prop('disabled', false);
-    }
 
     let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
     stream('Gold stars mean information was learned to help the team.');
@@ -167,9 +158,6 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
             goldenGoose.attr('id', 'result_' + pid + '_' + opType + '_' + i);
             goldenGoose.find('span').html('★');
         }
-        if (links[i].hasOwnProperty('hidden')){
-            gamePiece.css('background-color', 'rgba(255, 255, 255, 0.1)')
-        }
         gamePiece.css('display', 'flex');
 
         let wrapper = $('#' + opType + '-wrapper').clone();
@@ -184,7 +172,7 @@ function addGamePieces(opType, exchangeElem, links, pid, isHidden) {
         let mid = gamePiece.closest('.gameboard-row').find('.mid');
         mid.find('.gp-pid').html(pid);
         mid.find('.gp-host').html(links[i].host);
-        if (isHidden && !(links[i].hasOwnProperty('hidden'))) {
+        if (isHidden) {
             hidePieces(gamePiece, coverPiece);
         }
         else {
@@ -400,63 +388,6 @@ function addCollapsible(header, contents) {
         headerElem.classList.toggle('active');
         $(contents).slideToggle('slow');
     };
-}
-
-$('#hidden-operations-header').click(function() {
-    if ($('#hidden-operations-contents').css('display') == 'none') {
-       $('#hidden-operations-header').text('- Create Hidden Operation');
-    } else {
-        $('#hidden-operations-header').text('+ Create Hidden Operation');
-    }
-    $('#hidden-operations-contents').slideToggle();
-});
-
-function handleHiddenStartAction() {
-    let data = {};
-    data['op_name'] = $('#hiddenOpName').val();
-    data['group'] = $('#hiddenOpGroup').val();
-    data['profile'] = $('#hiddenOpProfile').val();
-    restRequest('POST', data, handleHiddenStartActionCallback, '/plugin/gameboard/hidden');
-}
-
-function handleHiddenStartActionCallback(data) {
-    if (data.hidden_red_operation.length > 0) {
-        let op = data.hidden_red_operation[0];
-        if ($('#gameboard').find('#red-operations option[value="hidden"]').length == 0) {
-            $('#gameboard').find('#red-operations').append('<option value="hidden" disabled>Hidden operations</option>');
-        }
-        $('#gameboard').find('#red-operations').append('<option value="'+op.id+'">'+op.name+' - '+op.start+'</option>');
-        $('#gameboard').find('#hiddenOpReturnStatus').text('Hidden operation "'+op.name+'" created');
-        $('#hiddenOpName').val('');
-        $('#hiddenOpGroup :nth-child(1)').prop('selected', true);
-        $('#hiddenOpProfile :nth-child(1)').prop('selected', true);
-        $('#gameboard').find('#HdnOpBtn').removeClass('button-success');
-        $('#gameboard').find('#HdnOpBtn').addClass('button-notready');
-
-    } else {
-        $('#gameboard').find('#hiddenOpReturnStatus').text('Hidden operation failed to create');
-    }
-    $('#gameboard').find('#hiddenOpReturnStatus').fadeIn();
-    setTimeout(function() {
-        $('#gameboard').find('#hiddenOpReturnStatus').fadeOut();
-    }, 3000);
-}
-
-function validateHiddenOpStart() {
-    let name = $('#gameboard').find('#hiddenOpName').val();
-    let group = $('#gameboard').find('#hiddenOpGroup').val();
-    let profile = $('#gameboard').find('#hiddenOpProfile').val();
-    if (name == null || name == "" || group == null || group == "" || profile == null || profile == "") {
-        $('#gameboard').find('#HdnOpBtn').css('opacity', 0.5);
-        $('#gameboard').find('#HdnOpBtn').attr('disabled', 'true');
-        $('#gameboard').find('#HdnOpBtn').removeClass('button-success');
-        $('#gameboard').find('#HdnOpBtn').addClass('button-notready');
-    } else {
-        $('#gameboard').find('#HdnOpBtn').css('opacity', 1);
-        $('#gameboard').find('#HdnOpBtn').removeAttr('disabled');
-        $('#gameboard').find('#HdnOpBtn').removeClass('button-notready');
-        $('#gameboard').find('#HdnOpBtn').addClass('button-success');
-    }
 }
 
 function verifyPopulateTechniques(parentId, tactics_and_techniques) {
