@@ -18,7 +18,7 @@ class GameboardService(BaseService):
     async def does_verify_info_match_any_run_link(self, host, technique_id, verify_type, verify_info):
         agents = await self.data_svc.locate('agents', match=dict(host=host, access=BaseService.Access.RED))
         operations = set()
-        op_access = (BaseService.Access.RED, BaseService.Access.HIDDEN)
+        op_access = BaseService.Access.RED
         operations.update([op for op in (await self.data_svc.locate('operations', match=dict(access=op_access)))
                            if any(agt in op.agents for agt in agents)])
         links_matching_technique_host = [link for op in operations for link in op.chain if
@@ -92,7 +92,7 @@ class GameboardService(BaseService):
         adversary = (await self.data_svc.locate('adversaries', match=dict(adversary_id=adversary_id)))[0]
         obj = (await self.data_svc.locate('objectives', match=dict(name='default')))[0]
         agent = Agent(0, 0, 0, paw='gameboard_detection')
-        access = self.Access.BLUE if red_op_access == self.Access.RED else self.Access.HIDDEN
+        access = self.Access.BLUE
         detection_operation = Operation(name=red_op_name+'_'+str(red_op_id)+self.blue_op_name_modifier, agents=[agent],
                                         adversary=adversary, access=access, planner=planner, group='blue')
         detection_operation.objective = obj
