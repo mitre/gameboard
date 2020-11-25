@@ -37,15 +37,19 @@ function refresh(){
         $('.gp-cover').on('click', function () { flipCoverPiece(access, $(this)) })
         $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
+
+        if (redOpState !== null) {
+            $('#gameboard-add-manual-detection-div').css('display', 'block');
+        }
     }
 
-    let open_verify_modal = '<br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
-    if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
-        let new_row = $('#exchange').clone();
-        $(new_row).attr('id', 'empty-row');
-        $('#the-gameboard').find('#exchanges').append(new_row);
-    }
-    $('#the-gameboard').find('#exchanges').find('.gameboard-row').last().find('.gameboard-column.blue.gp-link').append(open_verify_modal);
+//    let open_verify_modal = '<br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
+//    if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
+//        let new_row = $('#exchange').clone();
+//        $(new_row).attr('id', 'empty-row');
+//        $('#the-gameboard').find('#exchanges').append(new_row);
+//    }
+//    $('#the-gameboard').find('#exchanges').find('.gameboard-row').last().find('.gameboard-column.blue.gp-link').append(open_verify_modal);
 
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
 
@@ -419,6 +423,8 @@ function submitVerifyDetection(parentId) {
         data['verify'] = 'pid';
     }
     data['info'] = $(parent).find('#pid-entry').val();
+    data['redOpId'] = parseInt($('#red-operations option:selected').attr('value'));
+    data['blueOpId'] = parseInt($('#blue-operations option:selected').attr('value'));
     $(parent).find('#result-box').children().hide();
     restRequest('POST', data, verifyDetectionCallback, '/plugin/gameboard/detection');
 }
