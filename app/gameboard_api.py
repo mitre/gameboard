@@ -70,7 +70,7 @@ class GameboardApi(BaseService):
         verified = await self.gameboard_svc.does_verify_info_match_any_run_link(host, technique_id, verify_type,
                                                                                 verify_info)
         if verified:
-            op, message = await self.gameboard_svc.add_detection(verify_type, verified)
+            op, message = await self.gameboard_svc.add_detection(verify_type, verified, data.get('blueOpId'))
         return web.json_response(dict(verified=verified, red_operation=op, message=message))
 
     def _get_exchanges(self, red_ops, blue_ops):

@@ -32,22 +32,27 @@ class GameboardService(BaseService):
             return None
         return link_id
 
-    async def add_detection(self, verify_type, link_id):
+    async def add_detection(self, verify_type, link_id, blue_op_id):
         op, link = await self._find_op_and_link(link_id)
-        blue_op = await self.data_svc.locate('operations', dict(name=op.name+'_'+str(op.id)+self.blue_op_name_modifier))
-        if not blue_op:
-            blue_op = await self._create_detection_operation(red_op_name=op.name, red_op_id=op.id,
-                                                             red_op_access=op.access)
+        if blue_op_id:
+            blue_op = await self.data_svc.locate('operations', match=dict(id=blue_op_id))
+        else:
+            blue_op = await self.data_svc.locate('operations',
+                                                 dict(name=op.name+'_'+str(op.id)+self.blue_op_name_modifier))
+            if not blue_op:
+                blue_op = await self._create_detection_operation(red_op_name=op.name, red_op_id=op.id,
+                                                                 red_op_access=op.access)
         if not self._detection_exists(blue_op[0], verify_type, link):
             await self._add_detection_to_operation(op=blue_op[0], link_pid=link.pid, verify_type=verify_type)
             return op.id, 'Detection successfully added for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
         return None, 'Detection already exists for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
 
     async def is_link_verified(self, verify_type, link_id):
-        op, link = await self._find_op_and_link(link_id)
-        blue_op = await self.data_svc.locate('operations', dict(name=op.name+'_'+str(op.id)+self.blue_op_name_modifier))
-        if blue_op and self._detection_exists(blue_op[0], verify_type, link):
-            return True
+        blue_ops = await self.data_svc.locate('operations', dict(access=self.Access.BLUE))
+        _, link = await self._find_op_and_link(link_id)
+        for blue_op in blue_ops:
+            if self._detection_exists(blue_op[0], verify_type, link):
+                return True
         return False
 
     """PRIVATE"""
@@ -124,4 +129,5 @@ class GameboardService(BaseService):
         link.output = True
         link.status = 0
         link.id = link.generate_number()
+        link.pin = link_pid
         return link

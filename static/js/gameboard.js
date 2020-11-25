@@ -38,7 +38,7 @@ function refresh(){
         $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
 
-        if (redOpState !== null) {
+        if (redOpState !== null || blueOpState !== null) {
             $('#gameboard-add-manual-detection-div').css('display', 'block');
         }
     }
