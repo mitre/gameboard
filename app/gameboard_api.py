@@ -66,7 +66,12 @@ class GameboardApi(BaseService):
 
     async def analytic(self, request):
         data = dict(await request.json())
-        await self._start_custom_analytic_operation(data.get('name'), data.get('query'))
+        try:
+            await self._start_custom_analytic_operation(data.get('name'), data.get('query'))
+        except Exception as e:
+            print(e)
+            import traceback
+            traceback.print_exc()
         return web.json_response('success')
 
     def _get_exchanges(self, red_ops, blue_ops):
@@ -189,6 +194,7 @@ class GameboardApi(BaseService):
         for pl in ['windows', 'darwin', 'linux']:
             ability = Ability(ability_id=ability_id,
                               tactic='analytic',
+                              technique='analytic',
                               technique_name='analytic',
                               technique_id='x',
                               test=encoded_test,
@@ -202,20 +208,8 @@ class GameboardApi(BaseService):
         return [dict(ability_id=ability.ability_id)]
 
     async def _create_analytic_operation(self, operation_name, adversary):
-        planner = (await self.get_service('data_svc').locate('planners', match=dict(name='batch')))[0]
-        agents = await self.data_svc.locate('agents', match=dict(access=self.Access.BLUE))
-        adversary = (await self.data_svc.locate('adversaries', match=dict(adversary_id=adversary)))[0]
-        source = await self._create_analytic_source()
-        await self.get_service('data_svc').store(source)
-        operation = Operation(name=operation_name,
-                              agents=agents,
-                              adversary=adversary,
-                              source=source,
-                              access=self.Access.BLUE,
-                              planner=planner, state='running',
-                              auto_close=False, jitter='1/4')
-        obj = await self.get_service('data_svc').locate('objectives', match=dict(name='default'))
-        operation.objective = deepcopy(obj[0])
-        operation.start = datetime.datetime.now()
-        await self.data_svc.store(operation)
-        return operation
+        access = dict(access=[self.Access.BLUE])
+        data = dict(name=operation_name, group='blue', adversary_id=adversary,
+                    planner='batch', auto_close=True)
+        await self.rest_svc.create_operation(access=access, data=data)
+        return data
