@@ -1,13 +1,11 @@
 import uuid
 from base64 import b64encode
-import datetime
+from copy import deepcopy
 
 from aiohttp import web
 from aiohttp_jinja2 import template
-from copy import deepcopy
 
 from app.objects.c_ability import Ability
-from app.objects.c_operation import Operation
 from app.objects.c_source import Source
 from app.objects.secondclass.c_fact import Fact
 from app.utility.base_service import BaseService
@@ -190,6 +188,8 @@ class GameboardApi(BaseService):
 
     async def _create_analytic_ability(self, name, query):
         encoded_test = b64encode(query.strip().encode('utf-8')).decode()
+        reference_ability = (await self.data_svc.locate('abilities', match=dict(ability_id='bf565e6a-0037-4aa4-852f-1afa222c76db')))[0]  #TODO: replace
+        parsers = deepcopy(reference_ability.parsers)
         ability_id = str(uuid.uuid4())
         for pl in ['windows', 'darwin', 'linux']:
             ability = Ability(ability_id=ability_id,
@@ -198,9 +198,10 @@ class GameboardApi(BaseService):
                               technique_name='analytic',
                               technique_id='x',
                               test=encoded_test,
-                              description='custom analytic', executor='elasticsearch',
+                              description='custom analytic',
+                              executor='elasticsearch',
                               name=name, platform=pl,
-                              # parsers=info.get('parsers', []),
+                              parsers=parsers,
                               timeout=60,
                               buckets=['analytic'],
                               access=self.Access.BLUE)
