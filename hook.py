@@ -12,3 +12,4 @@ async def enable(services):
     app.router.add_route('GET', '/plugin/gameboard/gui', gameboard_api.splash)
     app.router.add_route('POST', '/plugin/gameboard/pieces', gameboard_api.get_pieces)
     app.router.add_route('PUT', '/plugin/gameboard/pin', gameboard_api.update_pin)
+    app.router.add_route('POST', '/plugin/gameboard/analytic', gameboard_api.analytic)
