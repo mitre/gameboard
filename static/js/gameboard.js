@@ -186,6 +186,10 @@ function getLinkInfo(exchanges, result) {
     $('#piece-id').html(link['id']);
     $('#piece-ability').html(link['ability']['name']);
     $('#piece-cmd').html(atob(link['command']));
+    function loadResults(data){
+        $('#piece-output').html(atob(data['output']));
+    }
+    restRequest('POST', {'index':'result','link_id':link.id}, loadResults);
     let factList = $('#piece-fact-list');
     link['facts'].forEach(function(fact) {
         let pieceFact = divClone('#default-fact', 'piece-fact', fact.trait + ': ' + fact.value);
@@ -275,6 +279,7 @@ function resetPieceModal() {
     let modal = $('#piece-modal');
     modal.hide();
     $('#piece-cmd').empty();
+    $('#piece-output').empty();
     $('#piece-fact-list').find('.piece-fact').remove();
     $('#piece-fact-list').hide();
     $('#piece-queries').find('.piece-query').remove();
