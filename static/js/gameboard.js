@@ -382,7 +382,6 @@ function addCollapsible(header, contents) {
 }
 
 function openAnalyticModal(){
-    console.log('button clicked');
     document.getElementById('analytic-op-modal').style.display='block';
 }
 
