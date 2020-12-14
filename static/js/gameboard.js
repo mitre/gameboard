@@ -380,3 +380,36 @@ function addCollapsible(header, contents) {
         $(contents).slideToggle('slow');
     };
 }
+
+function openAnalyticModal(){
+    console.log('button clicked');
+    document.getElementById('analytic-op-modal').style.display='block';
+}
+
+function resetAnalyticOpModal(){
+    $('#analytic-name').val('');
+    $('#analytic-query').val('');
+    $('#analytic-error').html('');
+    let modal = $('#analytic-op-modal');
+    modal.hide();
+}
+
+function createAnalytic(){
+    if (document.getElementById("analytic-name").value && document.getElementById("analytic-name").value){
+        restRequest('POST', buildAnalyticData(), handleAnalyticCallback, '/plugin/gameboard/analytic');
+        resetAnalyticOpModal()
+    }
+    else {
+        $('#analytic-error').html('all fields required');
+    }
+}
+
+function buildAnalyticData() {
+    let name = document.getElementById("analytic-name").value;
+    let query = document.getElementById("analytic-query").value;
+    return {'name': name, 'query': query};
+}
+
+function handleAnalyticCallback(data){
+    stream('Operation started, just wait a minute to see results.');
+}

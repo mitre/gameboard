@@ -40,6 +40,7 @@
               </div>
               <div class="gameboard-column mid">
                   <h3>Process</h3>
+                  <button class="button-success button-atomic" id="elastic-op" onclick="openAnalyticModal()">Custom Analytic</button>
               </div>
               <div class="gameboard-column">
                   <div class="scoreboard-points scoreboard-blue">
@@ -49,7 +50,7 @@
               </div>
               <div class="gameboard-column side"></div>
             </div>
-            <div id="exchanges" style="margin: 10px 0px;"></div>
+            <div id="exchanges" onclick="openAnalyticModal()" style="margin: 10px 0px;"></div>
         </div>
     </div>
 </div>
@@ -138,6 +139,33 @@
             <button class="button-success atomic-button pin-save" id="pin-save" onclick="savePin()">Save</button>
             <div class="save-msg" id="save-pin-msg" style="display: none"></div>
 
+        </div>
+    </div>
+</div>
+
+<div id="analytic-op-modal" class="modal">
+    <div class="modal-content ability-viewer">
+        <div class="imgcontainer">
+          <span onclick="resetAnalyticOpModal();" class="close" title="Close Modal">&times;</span>
+        </div>
+        <div class="container" style="text-align:left; padding: 10px 50px 100px;">
+            <div class="column" style="margin: 20px 0px;">
+                <table style="border-spacing:2px;width:100%;" rules="rows">
+                    <tbody>
+                        <tr>
+                            <td style="width: 10%;"><b>Name:</b></td>
+                            <td><input id="analytic-name" style="padding: 10px 0px;"></td>
+                        </tr>
+                        <tr>
+                            <td style="width: 10%;"><b>Query:</b></td>
+                            <td><textarea id="analytic-query" style="padding: 10px 0px; width: 90%"></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <center><div id="analytic-error"></div></center>
+            </div>
+
+            <button class="button-success atomic-button pin-save" id="analytic-save" onclick="createAnalytic()">Create Analytic</button>
         </div>
     </div>
 </div>

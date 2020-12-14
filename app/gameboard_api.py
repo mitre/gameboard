@@ -1,6 +1,15 @@
+import uuid
+from base64 import b64encode
+import datetime
+
 from aiohttp import web
 from aiohttp_jinja2 import template
+from copy import deepcopy
 
+from app.objects.c_ability import Ability
+from app.objects.c_operation import Operation
+from app.objects.c_source import Source
+from app.objects.secondclass.c_fact import Fact
 from app.utility.base_service import BaseService
 from app.service.auth_svc import for_all_public_methods, check_authorization
 
@@ -27,6 +36,7 @@ class GameboardApi(BaseService):
         self.auth_svc = services.get('auth_svc')
         self.data_svc = services.get('data_svc')
         self.app_svc = services.get('app_svc')
+        self.rest_svc = services.get('rest_svc')
 
     @template('gameboard.html')
     async def splash(self, request):
@@ -53,6 +63,11 @@ class GameboardApi(BaseService):
         link = await self.app_svc.find_link(data['link_id'])
         link.pin = int(data['updated_pin'])
         return web.json_response('completed')
+
+    async def analytic(self, request):
+        data = dict(await request.json())
+        await self._start_custom_analytic_operation(data.get('name'), data.get('query'))
+        return web.json_response('success')
 
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
@@ -144,3 +159,63 @@ class GameboardApi(BaseService):
         if red_link['visibility']['score'] >= 50:
             return dict(value=-2, reason='high visibility {} team activity not detected'.format(self.RED_TEAM))
         return dict(value=-1, reason='low visibility {} team activity not detected'.format(self.RED_TEAM))
+
+    async def _start_custom_analytic_operation(self, name, query):
+        adversary = await self._create_analytic_adversary(name, query)
+        operation = await self._create_analytic_operation(operation_name=name, adversary=adversary)
+        return operation
+
+    @staticmethod
+    async def _create_analytic_source():
+        source_id = str(uuid.uuid4())
+        source_name = 'analytic-{}'.format(source_id)
+        facts = [Fact(trait='test', value='test')]
+        return Source(id=source_id, name=source_name, facts=facts)
+
+    async def _create_analytic_adversary(self, name, query):
+        adversary_id = str(uuid.uuid4())
+        adversary_data = dict(id=adversary_id,
+                              name=name + ' adversary',
+                              description='custom analytic profile',
+                              objective=[])
+        abilities = await self._create_analytic_ability(name, query)
+        adversary_data['atomic_ordering'] = abilities
+        await self.rest_svc.persist_adversary(dict(access=[self.rest_svc.Access.BLUE]), adversary_data)
+        return adversary_id
+
+    async def _create_analytic_ability(self, name, query):
+        encoded_test = b64encode(query.strip().encode('utf-8')).decode()
+        ability_id = str(uuid.uuid4())
+        for pl in ['windows', 'darwin', 'linux']:
+            ability = Ability(ability_id=ability_id,
+                              tactic='analytic',
+                              technique_name='analytic',
+                              technique_id='x',
+                              test=encoded_test,
+                              description='custom analytic', executor='elasticsearch',
+                              name=name, platform=pl,
+                              # parsers=info.get('parsers', []),
+                              timeout=60,
+                              buckets=['analytic'],
+                              access=self.Access.BLUE)
+            await self.data_svc.store(ability)
+        return [dict(ability_id=ability.ability_id)]
+
+    async def _create_analytic_operation(self, operation_name, adversary):
+        planner = (await self.get_service('data_svc').locate('planners', match=dict(name='batch')))[0]
+        agents = await self.data_svc.locate('agents', match=dict(access=self.Access.BLUE))
+        adversary = (await self.data_svc.locate('adversaries', match=dict(adversary_id=adversary)))[0]
+        source = await self._create_analytic_source()
+        await self.get_service('data_svc').store(source)
+        operation = Operation(name=operation_name,
+                              agents=agents,
+                              adversary=adversary,
+                              source=source,
+                              access=self.Access.BLUE,
+                              planner=planner, state='running',
+                              auto_close=False, jitter='1/4')
+        obj = await self.get_service('data_svc').locate('objectives', match=dict(name='default'))
+        operation.objective = deepcopy(obj[0])
+        operation.start = datetime.datetime.now()
+        await self.data_svc.store(operation)
+        return operation
