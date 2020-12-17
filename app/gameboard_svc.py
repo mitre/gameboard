@@ -33,19 +33,21 @@ class GameboardService(BaseService):
         return link_id
 
     async def add_detection(self, verify_type, link_id, blue_op_id):
-        op, link = await self._find_op_and_link(link_id)
+        red_op, link = await self._find_op_and_link(link_id)
         if blue_op_id:
             blue_op = await self.data_svc.locate('operations', match=dict(id=blue_op_id))
         else:
             blue_op = await self.data_svc.locate('operations',
-                                                 dict(name=op.name+'_'+str(op.id)+self.blue_op_name_modifier))
+                                                 dict(name=red_op.name+'_'+str(red_op.id)+self.blue_op_name_modifier))
             if not blue_op:
-                blue_op = await self._create_detection_operation(red_op_name=op.name, red_op_id=op.id,
-                                                                 red_op_access=op.access)
+                blue_op = await self._create_detection_operation(red_op_name=red_op.name, red_op_id=red_op.id,
+                                                                 red_op_access=red_op.access)
         if not self._detection_exists(blue_op[0], verify_type, link):
             await self._add_detection_to_operation(op=blue_op[0], link_pid=link.pid, verify_type=verify_type)
-            return op.id, 'Detection successfully added for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
-        return None, 'Detection already exists for link in operation: ' + op.name + ' - ' + str(op.start) + '.'
+            message = 'Detection successfully added for link in operation: '+red_op.name+' - '+str(red_op.start)+'.'
+            return red_op.display, blue_op[0].display, message
+        message = 'Detection already exists for link in operation: '+red_op.name+' - '+str(red_op.start)+'.'
+        return None, None, message
 
     async def is_link_verified(self, verify_type, link_id):
         blue_ops = await self.data_svc.locate('operations', dict(access=self.Access.BLUE))

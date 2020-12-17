@@ -43,14 +43,6 @@ function refresh(){
         }
     }
 
-//    let open_verify_modal = '<br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById(\'verify-detection-modal\').style.display=\'block\'">+ Add External Detection</div>'
-//    if ($('#the-gameboard').find('#exchanges').find('.gameboard-row').length == 0) {
-//        let new_row = $('#exchange').clone();
-//        $(new_row).attr('id', 'empty-row');
-//        $('#the-gameboard').find('#exchanges').append(new_row);
-//    }
-//    $('#the-gameboard').find('#exchanges').find('.gameboard-row').last().find('.gameboard-column.blue.gp-link').append(open_verify_modal);
-
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
 
     let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
@@ -438,7 +430,11 @@ function verifyDetectionCallback(data) {
     if (data['verified'] != false) {
         $('#verify-detection-modal').find('#result-correct').find('.hunt-result-txt').text(data['message']);
         $('#verify-detection-modal').find('#result-correct').fadeIn();
-        $('#gameboard').find('#red-operations option[value="' + data['red_operation'] + '"]').prop('selected', true).change();
+        $('#gameboard').find('#red-operations option[value="' + data['red_operation']['id'] + '"]').prop('selected', true).change();
+        if ($('#gameboard').find('#blue-operations option[value="' + data['blue_operation']['id'] + '"]').length == 0) {
+            $('#gameboard').find('#blue-operations').append('<option value="'+data['blue_operation']['id']+'">'+data['blue_operation']['name']+' - '+data['blue_operation']['start']+'</option>')
+        }
+        $('#gameboard').find('#blue-operations option[value="' + data['blue_operation']['id'] + '"]').prop('selected', true).change();
     } else {
         $('#verify-detection-modal').find('#result-wrong').fadeIn();
     }

@@ -73,13 +73,14 @@ class GameboardApi(BaseService):
         technique_id = data.get('technique')
         verify_type = data.get('verify')
         verify_info = data.get('info')
-        op = None
-        message = None
+        red_op = None
+        blue_op = None
+        msg = None
         verified = await self.gameboard_svc.does_verify_info_match_any_run_link(host, technique_id, verify_type,
                                                                                 verify_info)
         if verified:
-            op, message = await self.gameboard_svc.add_detection(verify_type, verified, data.get('blueOpId'))
-        return web.json_response(dict(verified=verified, red_operation=op, message=message))
+            red_op, blue_op, msg = await self.gameboard_svc.add_detection(verify_type, verified, data.get('blueOpId'))
+        return web.json_response(dict(verified=verified, red_operation=red_op, blue_operation=blue_op, message=msg))
 
     async def analytic(self, request):
         data = dict(await request.json())
