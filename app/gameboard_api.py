@@ -67,7 +67,6 @@ class GameboardApi(BaseService):
         link.pin = int(data['updated_pin'])
         return web.json_response('completed')
 
-<<<<<<< HEAD
     async def verify_detection(self, request):
         data = dict(await request.json())
         host = data.get('host')
@@ -81,7 +80,7 @@ class GameboardApi(BaseService):
         if verified:
             op, message = await self.gameboard_svc.add_detection(verify_type, verified, data.get('blueOpId'))
         return web.json_response(dict(verified=verified, red_operation=op, message=message))
-=======
+
     async def analytic(self, request):
         data = dict(await request.json())
         try:
@@ -91,7 +90,6 @@ class GameboardApi(BaseService):
             import traceback
             traceback.print_exc()
         return web.json_response('success')
->>>>>>> master
 
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
@@ -184,7 +182,6 @@ class GameboardApi(BaseService):
             return dict(value=-2, reason='high visibility {} team activity not detected'.format(self.RED_TEAM))
         return dict(value=-1, reason='low visibility {} team activity not detected'.format(self.RED_TEAM))
 
-<<<<<<< HEAD
     @staticmethod
     async def _construct_splash_tactics(abilities):
         tactics = dict()
@@ -197,7 +194,7 @@ class GameboardApi(BaseService):
         for tactic in tactics:
             tactics[tactic] = list(tactics[tactic])
         return tactics
-=======
+
     async def _start_custom_analytic_operation(self, name, query):
         adversary = await self._create_analytic_adversary(name, query)
         operation = await self._create_analytic_operation(operation_name=name, adversary=adversary)
@@ -249,4 +246,3 @@ class GameboardApi(BaseService):
                     planner='batch', auto_close=True)
         await self.rest_svc.create_operation(access=access, data=data)
         return data
->>>>>>> master
