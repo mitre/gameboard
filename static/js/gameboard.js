@@ -199,6 +199,10 @@ function getLinkInfo(exchanges, result) {
     $('#piece-id').html(link['id']);
     $('#piece-ability').html(link['ability']['name']);
     $('#piece-cmd').html(atob(link['command']));
+    function loadResults(data){
+        $('#piece-output').html(atob(data['output']));
+    }
+    restRequest('POST', {'index':'result','link_id':link.id}, loadResults);
     let factList = $('#piece-fact-list');
     link['facts'].forEach(function(fact) {
         let pieceFact = divClone('#default-fact', 'piece-fact', fact.trait + ': ' + fact.value);
@@ -288,6 +292,7 @@ function resetPieceModal() {
     let modal = $('#piece-modal');
     modal.hide();
     $('#piece-cmd').empty();
+    $('#piece-output').empty();
     $('#piece-fact-list').find('.piece-fact').remove();
     $('#piece-fact-list').hide();
     $('#piece-queries').find('.piece-query').remove();
@@ -444,3 +449,35 @@ $('#verify-detection-modal').find('#pid-entry').keyup(function(event) {
         $('#verify-detection-modal').find('#submit-verify-detection').click();
     }
 });
+
+function openAnalyticModal(){
+    document.getElementById('analytic-op-modal').style.display='block';
+}
+
+function resetAnalyticOpModal(){
+    $('#analytic-name').val('');
+    $('#analytic-query').val('');
+    $('#analytic-error').html('');
+    let modal = $('#analytic-op-modal');
+    modal.hide();
+}
+
+function createAnalytic(){
+    if (document.getElementById("analytic-name").value && document.getElementById("analytic-name").value){
+        restRequest('POST', buildAnalyticData(), handleAnalyticCallback, '/plugin/gameboard/analytic');
+        resetAnalyticOpModal()
+    }
+    else {
+        $('#analytic-error').html('all fields required');
+    }
+}
+
+function buildAnalyticData() {
+    let name = document.getElementById("analytic-name").value;
+    let query = document.getElementById("analytic-query").value;
+    return {'name': name, 'query': query};
+}
+
+function handleAnalyticCallback(data){
+    stream('Operation started, just wait a minute to see results.');
+}

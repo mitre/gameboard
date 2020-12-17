@@ -1,6 +1,13 @@
+import uuid
+from base64 import b64encode
+from copy import deepcopy
+
 from aiohttp import web
 from aiohttp_jinja2 import template
 
+from app.objects.c_ability import Ability
+from app.objects.c_source import Source
+from app.objects.secondclass.c_fact import Fact
 from app.utility.base_service import BaseService
 from app.service.auth_svc import for_all_public_methods, check_authorization
 
@@ -27,6 +34,7 @@ class GameboardApi(BaseService):
         self.auth_svc = services.get('auth_svc')
         self.data_svc = services.get('data_svc')
         self.app_svc = services.get('app_svc')
+        self.rest_svc = services.get('rest_svc')
         self.gameboard_svc = services.get('gameboard_svc')
 
     @template('gameboard.html')
@@ -59,6 +67,7 @@ class GameboardApi(BaseService):
         link.pin = int(data['updated_pin'])
         return web.json_response('completed')
 
+<<<<<<< HEAD
     async def verify_detection(self, request):
         data = dict(await request.json())
         host = data.get('host')
@@ -72,6 +81,17 @@ class GameboardApi(BaseService):
         if verified:
             op, message = await self.gameboard_svc.add_detection(verify_type, verified, data.get('blueOpId'))
         return web.json_response(dict(verified=verified, red_operation=op, message=message))
+=======
+    async def analytic(self, request):
+        data = dict(await request.json())
+        try:
+            await self._start_custom_analytic_operation(data.get('name'), data.get('query'))
+        except Exception as e:
+            print(e)
+            import traceback
+            traceback.print_exc()
+        return web.json_response('success')
+>>>>>>> master
 
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
@@ -164,6 +184,7 @@ class GameboardApi(BaseService):
             return dict(value=-2, reason='high visibility {} team activity not detected'.format(self.RED_TEAM))
         return dict(value=-1, reason='low visibility {} team activity not detected'.format(self.RED_TEAM))
 
+<<<<<<< HEAD
     @staticmethod
     async def _construct_splash_tactics(abilities):
         tactics = dict()
@@ -176,3 +197,56 @@ class GameboardApi(BaseService):
         for tactic in tactics:
             tactics[tactic] = list(tactics[tactic])
         return tactics
+=======
+    async def _start_custom_analytic_operation(self, name, query):
+        adversary = await self._create_analytic_adversary(name, query)
+        operation = await self._create_analytic_operation(operation_name=name, adversary=adversary)
+        return operation
+
+    @staticmethod
+    async def _create_analytic_source():
+        source_id = str(uuid.uuid4())
+        source_name = 'analytic-{}'.format(source_id)
+        facts = [Fact(trait='test', value='test')]
+        return Source(id=source_id, name=source_name, facts=facts)
+
+    async def _create_analytic_adversary(self, name, query):
+        adversary_id = str(uuid.uuid4())
+        adversary_data = dict(id=adversary_id,
+                              name=name + ' adversary',
+                              description='custom analytic profile',
+                              objective=[])
+        abilities = await self._create_analytic_ability(name, query)
+        adversary_data['atomic_ordering'] = abilities
+        await self.rest_svc.persist_adversary(dict(access=[self.rest_svc.Access.BLUE]), adversary_data)
+        return adversary_id
+
+    async def _create_analytic_ability(self, name, query):
+        encoded_test = b64encode(query.strip().encode('utf-8')).decode()
+        reference_ability = (await self.data_svc.locate('abilities', match=dict(ability_id='bf565e6a-0037-4aa4-852f-1afa222c76db')))[0]  #TODO: replace
+        parsers = deepcopy(reference_ability.parsers)
+        ability_id = str(uuid.uuid4())
+        for pl in ['windows', 'darwin', 'linux']:
+            ability = Ability(ability_id=ability_id,
+                              tactic='analytic',
+                              technique='analytic',
+                              technique_name='analytic',
+                              technique_id='x',
+                              test=encoded_test,
+                              description='custom analytic',
+                              executor='elasticsearch',
+                              name=name, platform=pl,
+                              parsers=parsers,
+                              timeout=60,
+                              buckets=['analytic'],
+                              access=self.Access.BLUE)
+            await self.data_svc.store(ability)
+        return [dict(ability_id=ability.ability_id)]
+
+    async def _create_analytic_operation(self, operation_name, adversary):
+        access = dict(access=[self.Access.BLUE])
+        data = dict(name=operation_name, group='blue', adversary_id=adversary,
+                    planner='batch', auto_close=True)
+        await self.rest_svc.create_operation(access=access, data=data)
+        return data
+>>>>>>> master
