@@ -35,17 +35,12 @@ class GameboardApi(BaseService):
         self.data_svc = services.get('data_svc')
         self.app_svc = services.get('app_svc')
         self.rest_svc = services.get('rest_svc')
-        self.gameboard_svc = services.get('gameboard_svc')
 
     @template('gameboard.html')
     async def splash(self, request):
         red_ops = [red.display for red in await self.data_svc.locate('operations', dict(access=self.Access.RED))]
         blue_ops = [blue.display for blue in await self.data_svc.locate('operations', dict(access=self.Access.BLUE))]
-        agents = await self.data_svc.locate('agents', match=dict(access=BaseService.Access.RED))
-        hosts = set(agt.host for agt in agents)
-        abilities = await self.data_svc.locate('abilities', match=dict(access=BaseService.Access.RED))
-        tactics = await self._construct_splash_tactics(abilities)
-        return dict(red_ops=red_ops, blue_ops=blue_ops, hosts=hosts, tactics=tactics)
+        return dict(red_ops=red_ops, blue_ops=blue_ops)
 
     async def get_pieces(self, request):
         data = dict(await request.json())
@@ -79,21 +74,6 @@ class GameboardApi(BaseService):
             link.pin = int(data['updated_pin'])
             return web.json_response('Pinned to PID: ' + str(data['updated_pin']))
 
-    async def verify_detection(self, request):
-        data = dict(await request.json())
-        host = data.get('host')
-        technique_id = data.get('technique')
-        verify_type = data.get('verify')
-        verify_info = data.get('info')
-        red_op = None
-        blue_op = None
-        msg = None
-        verified = await self.gameboard_svc.does_verify_info_match_any_run_link(host, technique_id, verify_type,
-                                                                                verify_info)
-        if verified:
-            red_op, blue_op, msg = await self.gameboard_svc.add_detection(verify_type, verified, data.get('blueOpId'))
-        return web.json_response(dict(verified=verified, red_operation=red_op, blue_operation=blue_op, message=msg))
-
     async def analytic(self, request):
         data = dict(await request.json())
         try:
@@ -107,8 +87,8 @@ class GameboardApi(BaseService):
     def _get_exchanges(self, red_ops, blue_ops):
         exchanges = dict()
         self._set_pins(blue_ops)
-        exchanges = self._add_links_to_exchanges(exchanges, self._get_sorted_links(blue_ops), team=self.BLUE_TEAM)
         exchanges = self._add_links_to_exchanges(exchanges, self._get_sorted_links(red_ops), team=self.RED_TEAM)
+        exchanges = self._add_links_to_exchanges(exchanges, self._get_sorted_links(blue_ops), team=self.BLUE_TEAM)
         return exchanges
 
     def _set_pins(self, blue_ops):
@@ -194,19 +174,6 @@ class GameboardApi(BaseService):
         if red_link['visibility']['score'] >= 50:
             return dict(value=-2, reason='high visibility {} team activity not detected'.format(self.RED_TEAM))
         return dict(value=-1, reason='low visibility {} team activity not detected'.format(self.RED_TEAM))
-
-    @staticmethod
-    async def _construct_splash_tactics(abilities):
-        tactics = dict()
-        for ab in abilities:
-            technique = (ab.technique_id, ab.technique_name)
-            if ab.tactic in tactics:
-                tactics[ab.tactic.lower()].add(technique)
-            else:
-                tactics[ab.tactic] = set([technique])
-        for tactic in tactics:
-            tactics[tactic] = list(tactics[tactic])
-        return tactics
 
     async def _start_custom_analytic_operation(self, name, query):
         adversary = await self._create_analytic_adversary(name, query)
