@@ -371,8 +371,8 @@ function generateELKQuery(field, value) {
 }
 
 function savePin() {
-    function updatedPin() {
-        $('#save-pin-msg').text('Saved!').show().fadeOut(2000);
+    function updatedPin(data) {
+        $('#save-pin-msg').text(data).show().fadeOut(2000);
     }
     let pin = document.getElementById('piece-pin');
     if (isNaN(pin.value)) {
@@ -380,7 +380,8 @@ function savePin() {
         return
     }
     let id = document.getElementById('piece-id');
-    restRequest('PUT', {'link_id': id.innerHTML, 'updated_pin': pin.value}, updatedPin, '/plugin/gameboard/pin');
+    let is_child_pid = $('#childpid-checkbox').is(':checked');
+    restRequest('PUT', {'link_id': id.innerHTML, 'updated_pin': pin.value, 'is_child_pid': is_child_pid}, updatedPin, '/plugin/gameboard/pin');
 }
 
 function addCollapsible(header, contents) {

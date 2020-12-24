@@ -33,7 +33,7 @@ class GameboardService(BaseService):
         return link_id
 
     async def add_detection(self, verify_type, link_id, blue_op_id):
-        red_op, link = await self._find_op_and_link(link_id)
+        red_op, link = await self.find_op_and_link(link_id)
         if blue_op_id:
             blue_op = await self.data_svc.locate('operations', match=dict(id=blue_op_id))
         else:
@@ -51,21 +51,21 @@ class GameboardService(BaseService):
 
     async def is_link_verified(self, verify_type, link_id):
         blue_ops = await self.data_svc.locate('operations', dict(access=self.Access.BLUE))
-        _, link = await self._find_op_and_link(link_id)
+        _, link = await self.find_op_and_link(link_id)
         for blue_op in blue_ops:
             if self._detection_exists(blue_op[0], verify_type, link):
                 return True
         return False
 
-    """PRIVATE"""
-
-    async def _find_op_and_link(self, link_id):
+    async def find_op_and_link(self, link_id):
         operations = await self.get_service('data_svc').locate('operations')
         for op in operations:
             for link in op.chain:
                 if str(link_id) == link.unique:
                     return op, link
         return None, None
+
+    """PRIVATE"""
 
     @staticmethod
     async def _does_pid_match_any_run_link(links, pid):

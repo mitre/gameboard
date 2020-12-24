@@ -63,9 +63,21 @@ class GameboardApi(BaseService):
 
     async def update_pin(self, request):
         data = dict(await request.json())
-        link = await self.app_svc.find_link(data['link_id'])
-        link.pin = int(data['updated_pin'])
-        return web.json_response('completed')
+        link = await self.app_svc.find_link(int(data['link_id']))
+        if data['is_child_pid']:
+            autocollect_adv = self.get_service('response_svc').adversary.adversary_id
+            for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
+                            if op.adversary.adversary_id == autocollect_adv]:
+                for lnk in blue_op.chain:
+                    # TODO: add check for host match, and make pin assignment less brittle
+                    if any(fact.trait in ['host.process.childid', 'host.process.grandchildid'] and
+                           int(fact.value) == int(data['updated_pin']) for fact in lnk.facts):
+                        link.pin = lnk.pin
+                        return web.json_response('Pinned to parent PID: ' + str(link.pin))
+                return web.json_response('Child PID not matched to any parent PIDs')
+        else:
+            link.pin = int(data['updated_pin'])
+            return web.json_response('Pinned to PID: ' + str(data['updated_pin']))
 
     async def verify_detection(self, request):
         data = dict(await request.json())
