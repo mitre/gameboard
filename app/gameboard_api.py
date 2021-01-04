@@ -60,15 +60,10 @@ class GameboardApi(BaseService):
         data = dict(await request.json())
         link = await self.app_svc.find_link(int(data['link_id']))
         if data['is_child_pid']:
-            autocollect_adv = self.get_service('response_svc').adversary.adversary_id
-            for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
-                            if op.adversary.adversary_id == autocollect_adv]:
-                for lnk in blue_op.chain:
-                    # TODO: add check for host match, and make pin assignment less brittle
-                    if any(fact.trait in ['host.process.childid', 'host.process.grandchildid'] and
-                           int(fact.value) == int(data['updated_pin']) for fact in lnk.facts):
-                        link.pin = lnk.pin
-                        return web.json_response('Pinned to parent PID: ' + str(link.pin))
+            result = await self._match_child_process(data['updated_pin'], link)
+            if result:
+                return web.json_response('Pinned to parent PID: ' + result)
+            else:
                 return web.json_response('Child PID not matched to any parent PIDs')
         else:
             link.pin = int(data['updated_pin'])
@@ -226,3 +221,22 @@ class GameboardApi(BaseService):
                     planner='batch', auto_close=True)
         await self.rest_svc.create_operation(access=access, data=data)
         return data
+
+    async def _match_child_process(self, target_pid, link):
+        autocollect_adv = self.get_service('response_svc').adversary.adversary_id
+        for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
+                        if op.adversary.adversary_id == autocollect_adv]:
+            for lnk in blue_op.chain:
+                if any(self._get_fact_value(lnk, trait) == target_pid for trait in
+                       ['host.process.childid', 'host.process.grandchildid']) and \
+                        self.get_fact_value(lnk, 'host.process.id'):
+                    link.pin = self.get_fact_value(lnk, 'host.process.id')
+                    return str(link.pin)
+        return None
+
+    @staticmethod
+    async def _get_fact_value(self, link, trait):
+        for fact in [link.facts + link.used]:
+            if fact.trait == trait:
+                return fact.value
+        return None
