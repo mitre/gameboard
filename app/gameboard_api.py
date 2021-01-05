@@ -227,10 +227,10 @@ class GameboardApi(BaseService):
         for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
                         if op.adversary.adversary_id == autocollect_adv]:
             for lnk in blue_op.chain:
-                if any(self._get_fact_value(lnk, trait) == target_pid for trait in
+                if any(await self._get_fact_value(lnk, trait) == target_pid for trait in
                        ['host.process.childid', 'host.process.grandchildid']) and \
-                        self.get_fact_value(lnk, 'host.process.id'):
-                    link.pin = self.get_fact_value(lnk, 'host.process.id')
+                        await self.get_fact_value(lnk, 'host.process.id'):
+                    link.pin = await self.get_fact_value(lnk, 'host.process.id')
                     return str(link.pin)
         return None
 
