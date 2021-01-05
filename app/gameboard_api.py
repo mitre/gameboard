@@ -223,7 +223,7 @@ class GameboardApi(BaseService):
         return data
 
     async def _match_child_process(self, target_pid, link):
-        autocollect_adv = self.get_service('response_svc').adversary.adversary_id
+        autocollect_adv = (await self.get_service('response_svc').get_field('adversary')).adversary_id
         for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
                         if op.adversary.adversary_id == autocollect_adv]:
             for lnk in blue_op.chain:
