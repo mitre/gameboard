@@ -377,6 +377,7 @@ function savePin() {
     let id = document.getElementById('piece-id');
     let is_child_pid = $('#childpid-checkbox').is(':checked');
     restRequest('PUT', {'link_id': id.innerHTML, 'updated_pin': pin.value, 'is_child_pid': is_child_pid}, updatedPin, '/plugin/gameboard/pin');
+    refresh()
 }
 
 function addCollapsible(header, contents) {

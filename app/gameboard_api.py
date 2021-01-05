@@ -58,7 +58,7 @@ class GameboardApi(BaseService):
 
     async def update_pin(self, request):
         data = dict(await request.json())
-        link = await self.app_svc.find_link(int(data['link_id']))
+        link = await self.app_svc.find_link(str(data['link_id']))
         if data['is_child_pid']:
             result = await self._match_child_process(data['updated_pin'], link)
             if result:
@@ -227,16 +227,16 @@ class GameboardApi(BaseService):
         for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
                         if op.adversary.adversary_id == autocollect_adv]:
             for lnk in blue_op.chain:
-                if any(await self._get_fact_value(lnk, trait) == target_pid for trait in
+                if any(self._get_fact_value(lnk, trait) == target_pid for trait in
                        ['host.process.childid', 'host.process.grandchildid']) and \
-                        await self.get_fact_value(lnk, 'host.process.id'):
-                    link.pin = await self.get_fact_value(lnk, 'host.process.id')
+                        self._get_fact_value(lnk, 'host.process.id'):
+                    link.pin = int(self._get_fact_value(lnk, 'host.process.id'))
                     return str(link.pin)
         return None
 
     @staticmethod
-    async def _get_fact_value(self, link, trait):
-        for fact in [link.facts + link.used]:
+    def _get_fact_value(link, trait):
+        for fact in (link.facts + link.used):
             if fact.trait == trait:
                 return fact.value
         return None
