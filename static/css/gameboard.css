@@ -265,3 +265,29 @@ button.pin-save {
     font-size: 15px;
     color: white;
 }
+#open-verify-modal {
+    cursor: pointer;
+    margin: auto;
+    margin-top: 0;
+    margin-bottom: 0;
+    background-color: cornflowerblue;
+    opacity: 0.8;
+    color: white;
+}
+#guid-select-duk-icon #guid-select-duk-text {
+    visibility: hidden;
+    width: 400px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    font-size: 13px;
+    position: absolute;
+    z-index: 1;
+    bottom: 36%;
+    margin-left: -124px;
+}
+#guid-select-duk-icon:hover #guid-select-duk-text {
+    visibility: visible;
+}

@@ -38,8 +38,13 @@ function refresh(){
         $('.points-cover').on('click', function () { flipPointsPiece($(this)) })
         $('.points-details').on('click', function () { flipPointsPiece($(this)) })
 
+        if (redOpState !== null || blueOpState !== null) {
+            $('#gameboard-add-manual-detection-div').css('display', 'block');
+        }
     }
+
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
+
     let blueOpId = parseInt($('#blue-operations option:selected').attr('value'));
     stream('Gold stars mean information was learned to help the team.');
     restRequest('POST', {'red':redOpId,'blue':blueOpId}, draw, '/plugin/gameboard/pieces');
@@ -385,6 +390,61 @@ function addCollapsible(header, contents) {
         $(contents).slideToggle('slow');
     };
 }
+
+function verifyPopulateTechniques(parentId, tactics_and_techniques) {
+    let parent = $('#'+parentId);
+    $(parent).find('#technique-select').empty().append("<option disabled='disabled' selected>Choose a technique</option>");
+    let tactic = $(parent).find('#tactic-select').val();
+    let techniques = tactics_and_techniques[tactic];
+    $.each(techniques, function(i) {
+        verifyAppendTechniqueToList(parentId, tactic, techniques[i]);
+    });
+    alphabetize_dropdown($(parent).find('#technique-select'));
+}
+
+function verifyAppendTechniqueToList(parentId, tactic, value) {
+    $('#'+parentId).find('#technique-select').append($("<option></option>")
+        .attr("value", value[0])
+        .data("technique", value[0])
+        .text(value[0] + ' | '+ value[1]));
+}
+
+function submitVerifyDetection(parentId) {
+    let parent = $('#'+parentId);
+    let data = {};
+    data['host'] = $(parent).find('#host-select').val();
+    data['technique'] = $(parent).find('#technique-select').val();
+    if ($(parent).find('#togBtnHunt').is(':checked')) {
+        data['verify'] = 'guid';
+    } else {
+        data['verify'] = 'pid';
+    }
+    data['info'] = $(parent).find('#pid-entry').val();
+    data['redOpId'] = parseInt($('#red-operations option:selected').attr('value'));
+    data['blueOpId'] = parseInt($('#blue-operations option:selected').attr('value'));
+    $(parent).find('#result-box').children().hide();
+    restRequest('POST', data, verifyDetectionCallback, '/plugin/gameboard/detection');
+}
+
+function verifyDetectionCallback(data) {
+    if (data['verified'] != false) {
+        $('#verify-detection-modal').find('#result-correct').find('.hunt-result-txt').text(data['message']);
+        $('#verify-detection-modal').find('#result-correct').fadeIn();
+        $('#gameboard').find('#red-operations option[value="' + data['red_operation']['id'] + '"]').prop('selected', true).change();
+        if ($('#gameboard').find('#blue-operations option[value="' + data['blue_operation']['id'] + '"]').length == 0) {
+            $('#gameboard').find('#blue-operations').append('<option value="'+data['blue_operation']['id']+'">'+data['blue_operation']['name']+' - '+data['blue_operation']['start']+'</option>')
+        }
+        $('#gameboard').find('#blue-operations option[value="' + data['blue_operation']['id'] + '"]').prop('selected', true).change();
+    } else {
+        $('#verify-detection-modal').find('#result-wrong').fadeIn();
+    }
+}
+
+$('#verify-detection-modal').find('#pid-entry').keyup(function(event) {
+    if (event.keyCode == 13) {
+        $('#verify-detection-modal').find('#submit-verify-detection').click();
+    }
+});
 
 function openAnalyticModal(){
     document.getElementById('analytic-op-modal').style.display='block';

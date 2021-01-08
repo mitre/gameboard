@@ -7,7 +7,7 @@
         <div id="gameboard-sidebar" class="column section-border" style="flex:25%;text-align:left;padding:15px;">
              <h1 style="font-size:50px;margin-top:0;">GameBoard</h1>
              <h2 style="margin-top:-35px">red vs. blue exercises</h2>
-             <p>
+             <p style="text-align:left">
                  Monitor red-and-blue team operations during an exercise to see if blue can detect, respond and
                  shut down a red-team adversary.
              </p>
@@ -46,6 +46,9 @@
                   <div class="scoreboard-points scoreboard-blue">
                       <p id="gb-blue-points">0</p>
                       <p style="font-size:12px;margin-top: -40px">points</p>
+                  </div>
+                  <div id="gameboard-add-manual-detection-div" style="display:none">
+                      <br><button type="button" class="atomic-button" id="open-verify-modal" onclick="document.getElementById('verify-detection-modal').style.display='block'">+ Add External Detection</button>
                   </div>
               </div>
               <div class="gameboard-column side"></div>
@@ -147,6 +150,86 @@
     </div>
 </div>
 
+<div id="verify-detection-modal" class="modal" style="display:none">
+    <div class="modal-content" style="width:60%">
+        <div class="container">
+            <div class="row duk-modal" style="display:block">
+                <div onclick="document.getElementById('verify-detection-modal').style.display='none'">
+                    <span class="close" title="Close Modal">&times;</span>
+                </div>
+                <div id="verify-detection-form" class="row-simple" style="width:100%">
+                    <div class="column" style="width:75%;margin-bottom:-35px">
+                        <div class="column" style="flex:60%">
+                            <table frame=void rules=rows style="border-spacing:2px;width:100%">
+                                <tr>
+                                    <td style="width:10%"><b style="color:white">host:</b></td>
+                                    <td>
+                                        <select id="host-select" style="width:99%; margin:5px">
+                                            <option value="" disabled="disabled" selected>Select a host</option>
+                                            {% for host in hosts %}
+                                                <option id="select-{{ host }}" value="{{ host }}">{{ host }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width:10%"><b style="color:white">tactic:</b></td>
+                                    <td>
+                                        <select id="tactic-select" onchange="verifyPopulateTechniques('verify-detection-modal', tactics_and_techniques)" style="width:99%; margin:5px">
+                                            <option disabled selected>Choose a tactic</option>
+                                            {% for tactic in tactics %}
+                                                <option value="{{ tactic }}" data-tactic="{{ tactic }}">{{ tactic }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="width:10%"><b style="color:white">technique:</b></td>
+                                    <td>
+                                        <select id="technique-select" style="width:99%; margin:5px">
+                                            <option disabled selected>Choose a technique</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="display:flex;border:none">
+                                        <div class="toggle" style="margin-top:3px; flex:90%">
+                                            <label class="switch"><input type="checkbox" id="togBtnHunt" >
+                                                <div class="slider round" style="background-color:black">
+                                                    <span class="on" style="top:45%"><b style="font-size:16px">guid</b></span>
+                                                    <span class="off" style="top:45%"><b style="font-size:16px">pid</b></span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div id="guid-select-duk-icon" class="duk-icon" style="flex:10%;margin-top:2px">
+                                            <img style="height:10px" src="/gui/img/duk.png">
+                                            <span id="guid-select-duk-text">In order to add a manual Sysmon GUID detection, a blue agent must have been running on the target system during the red operation.</span>
+                                        </div>
+                                    </td>
+                                    <td><input id="pid-entry" type="text" placeholder="Enter PID/GUID" style="width:99%;margin:5px;text-align:left;"></td>
+                                </tr>
+                            </table>
+                            <button id="submit-verify-detection" type="button" class="button-success atomic-button" onclick="submitVerifyDetection('verify-detection-modal')" style="margin-top:25px;width:50%;padding:0px">Submit</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="hunt-result" style="">
+                    <div id="result-box" class="column">
+                        <div id="result-correct" style="display:none">
+                            <img class="hunt-result-img" src="/gameboard/img/check-mark.png"/>
+                            <h4 class="hunt-result-txt">The information you entered matched correctly!</h4>
+                        </div>
+                        <div id="result-wrong" style="display:none">
+                            <img class="hunt-result-img" src="/gameboard/img/x-mark.png"/>
+                            <h4 class="hunt-result-txt">The information you entered did not match correctly.</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="analytic-op-modal" class="modal">
     <div class="modal-content ability-viewer">
         <div class="imgcontainer">
@@ -175,3 +258,7 @@
 </div>
 
 <script src="/gameboard/js/gameboard.js"></script>
+
+<script>
+    var tactics_and_techniques = {{ tactics | tojson }};
+</script>
