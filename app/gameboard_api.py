@@ -65,7 +65,7 @@ class GameboardApi(BaseService):
         data = dict(await request.json())
         link = await self.app_svc.find_link(str(data['link_id']))
         if data['is_child_pid']:
-            result = await self._match_child_process(data['updated_pin'], link)
+            result = await self._match_child_process(int(data['updated_pin']), link)
             if result:
                 return web.json_response('Pinned to parent PID: ' + result)
             else:
@@ -256,19 +256,22 @@ class GameboardApi(BaseService):
         return data
 
     async def _match_child_process(self, target_pid, link):
-        self.get_service('response_svc').apply_adversary_config()
-        autocollect_adv = self.get_service('response_svc').adversary.adversary_id
-        for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
-                        if op.adversary.adversary_id == autocollect_adv]:
-            for lnk in blue_op.chain:
-                if self._get_fact_value(lnk, 'host.process.childid') == target_pid and \
-                        self._get_fact_value(lnk, 'host.process.id'):
-                    link.pin = int(self._get_fact_value(lnk, 'host.process.id'))
-                    return str(link.pin)
-                elif self._get_fact_value(lnk, 'host.process.grandchildid') == target_pid and \
-                        self._get_fact_value(lnk, 'host.process.childid'):
-                    target_pid = self._get_fact_value(lnk, 'host.process.childid')
-                    return await self._match_child_process(target_pid, link)
+        processtree = await self.data_svc.locate('processtrees')
+        if processtree:
+            parent_pids = await processtree[0].find_original_process_by_pid(target_pid, link.host)
+        # self.get_service('response_svc').apply_adversary_config()
+        # autocollect_adv = self.get_service('response_svc').adversary.adversary_id
+        # for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
+        #                 if op.adversary.adversary_id == autocollect_adv]:
+        #     for lnk in blue_op.chain:
+        #         if self._get_fact_value(lnk, 'host.process.childid') == target_pid and \
+        #                 self._get_fact_value(lnk, 'host.process.id'):
+        #             link.pin = int(self._get_fact_value(lnk, 'host.process.id'))
+        #             return str(link.pin)
+        #         elif self._get_fact_value(lnk, 'host.process.grandchildid') == target_pid and \
+        #                 self._get_fact_value(lnk, 'host.process.childid'):
+        #             target_pid = self._get_fact_value(lnk, 'host.process.childid')
+        #             return await self._match_child_process(target_pid, link)
         return None
 
     @staticmethod
