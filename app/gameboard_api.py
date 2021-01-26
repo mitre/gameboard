@@ -66,8 +66,12 @@ class GameboardApi(BaseService):
         link = await self.app_svc.find_link(str(data['link_id']))
         if data['is_child_pid']:
             result = await self._match_child_process(int(data['updated_pin']), link)
-            if result:
+            if result and len(result) == 1:
+                link.pin = result[0]
                 return web.json_response('Pinned to parent PID: ' + result)
+            elif result and len(result) > 1:
+                # TODO: send information back to verify which link to match
+                return web.json_response('multiple pids')
             else:
                 return web.json_response('Child PID not matched to any parent PIDs')
         else:
@@ -258,7 +262,17 @@ class GameboardApi(BaseService):
     async def _match_child_process(self, target_pid, link):
         processtree = await self.data_svc.locate('processtrees')
         if processtree:
-            parent_pids = await processtree[0].find_original_process_by_pid(target_pid, link.host)
+            parent_pids = await processtree[0].find_original_processes_by_pid(target_pid, link.host)
+            if parent_pids and len(parent_pids) > 1:
+                matches = []
+                ops = [op for op in (await self.data_svc.locate('operations')) if op.access is not self.Access.BLUE]
+                for link in [lnk for op in ops for lnk in op.chain]:
+                    if link.pid in parent_pids:
+                        matches.append(link.display)
+                return matches
+            return parent_pids
+        return None
+
         # self.get_service('response_svc').apply_adversary_config()
         # autocollect_adv = self.get_service('response_svc').adversary.adversary_id
         # for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))

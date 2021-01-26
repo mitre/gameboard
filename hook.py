@@ -1,6 +1,7 @@
 from app.utility.base_world import BaseWorld
 from plugins.gameboard.app.gameboard_api import GameboardApi
 from plugins.gameboard.app.gameboard_svc import GameboardService
+from plugins.gameboard.test.test_processtree import create_test_processtree_and_ops
 
 name = 'GameBoard'
 description = 'Monitor a red-and-blue team operation'
@@ -23,6 +24,13 @@ async def enable(services):
 async def expansion(services):
     data_svc = services.get('data_svc')
     await _apply_hidden_access_to_loaded_files(data_svc)
+    test_processtree, red_op, blue_op = await create_test_processtree_and_ops()
+    planner = (await services.get('data_svc').locate('planners', match=dict(name='atomic')))[0]
+    red_op.planner = planner
+    blue_op.planner = planner
+    await data_svc.store(test_processtree)
+    await data_svc.store(red_op)
+    await data_svc.store(blue_op)
 
 
 async def _apply_hidden_access_to_loaded_files(data_svc):
