@@ -27,6 +27,7 @@ function refresh(){
         updateExchanges(exchanges, access);
 
         $('.golden-goose').on('click', function () { getLinkInfo(exchanges, $(this)) })
+        $('.gp-blue-pin').on('click', function() { openPinBlueLinkModal(exchanges, $(this)) })
 
         if (access == 'red') {
             $('.gp-blue').on('click', function() { flipGamePiece(access, $(this)) });
@@ -374,15 +375,16 @@ function savePin() {
     function updatedPin(data) {
         $('#save-pin-msg').text(data).show().fadeOut(2000);
     }
-    let pin = document.getElementById('piece-pin');
+    let pin = document.getElementById('piece-pin-input');
     if (isNaN(pin.value)) {
         $('#save-pin-msg').text('Input is not a number').show().fadeOut(2000);
         return
     }
-    let id = document.getElementById('piece-id');
-    let is_child_pid = $('#childpid-checkbox').is(':checked');
-    restRequest('PUT', {'link_id': id.innerHTML, 'updated_pin': pin.value, 'is_child_pid': is_child_pid}, updatedPin, '/plugin/gameboard/pin');
-    refresh()
+    let id = document.getElementById('pin-modal-link-id');
+    let is_child_pid = $('#togBtnParentChild').is(':checked');
+    restRequest('PUT', {'link_id': id.value, 'updated_pin': pin.value, 'is_child_pid': is_child_pid}, updatedPin, '/plugin/gameboard/pin');
+    refresh();
+    asdf;
 }
 
 function addCollapsible(header, contents) {
@@ -478,4 +480,16 @@ function buildAnalyticData() {
 
 function handleAnalyticCallback(data){
     stream('Operation started, just wait a minute to see results.');
+}
+
+function openPinBlueLinkModal(exchanges, elem){
+    let piece = $(elem).parent();
+    let modal = $("#pin-blue-link-modal");
+    $(modal).find("#pin-blue-link-modal-link-name").text($(piece).find(".gp-ability").text());
+    $(modal).css('display', 'block');
+
+    let id = $(piece).attr('id').split('-');
+    let exchange = findExchange(exchanges, id[1]);
+    let link = exchange[id[2]][id[3]];
+    $('#pin-modal-link-id').val(link['id']);
 }

@@ -77,6 +77,7 @@
     <span class="gp-agent"></span>
 </div>
 <div id="blue-piece" class="gameboard-column gp-blue" style="display:none">
+    <span class="gp-blue-pin" style="cursor: pointer"><img class="gp-blue-pin-img" src="/gameboard/img/pin.png"/></span>
     <span class="golden-goose"><span></span></span>
     <span class="gp-ability"></span>
     <span class="gp-time"></span>
@@ -145,9 +146,6 @@
                     <pre id="default-query" style="display: none"></pre>
                 </div>
             </div>
-            <button class="button-success atomic-button pin-save" id="pin-save" onclick="savePin()">Save</button>
-            <div class="save-msg" id="save-pin-msg" style="display: none"></div>
-
         </div>
     </div>
 </div>
@@ -232,14 +230,31 @@
     </div>
 </div>
 
-<div id="pin-blue-link-modal" class="modal" style="display: block">
+<div id="pin-blue-link-modal" class="modal" style="display: none">
     <div class="modal-content" style="width:60%">
         <div class="container">
             <div class="row duk-modal" style="display:block">
                 <div onclick="document.getElementById('pin-blue-link-modal').style.display='none'">
                     <span class="close" title="Close Modal">&times;</span>
                 </div>
-                <div id="pin-blue-link-form" class="row-simple" style="width:100%"></div>
+                <strong id="pin-blue-link-modal-link-name" style="color: white">Find Child Process</strong><br><br>
+                <div style="color: white;width: 40%;margin: auto;margin-top: 10px; margin-bottom: 30px">Determine if the PID to match is the top-level ability's PID or a PID of one of its child processes, and then enter the PID to match for.</div>
+                <div id="pin-blue-link-form" class="row-simple" style="width: 40%;margin: auto; display: flex">
+                    <div class="toggle" style="margin-top: 3px;width: 40%">
+                        <label class="switch"><input type="checkbox" id="togBtnParentChild" >
+                            <div class="slider round" style="background-color:black">
+                                <span class="on" style="top:45%"><b style="font-size:13px">Child</b></span>
+                                <span class="off" style="top:45%"><b style="font-size:13px">Parent</b></span>
+                            </div>
+                        </label>
+                    </div>
+                    <input class="pin" type="text" id="piece-pin-input" placeholder="PID" style="width: 45%;margin-top: 5px">
+                    <input id="pin-modal-link-id" type="hidden">
+                </div>
+                <div id="pin-blue-link-submit-wrapper" style="display: flex">
+                    <div id="pin-blue-link-submit" class="button-success atomic-button" onclick="savePin()" style="width: 15%;display: flex;align-items: center;justify-content: center;margin-left: 43%;margin-top: 10px">Submit</div>
+                    <div class="save-msg" id="save-pin-msg" style="display: none;float: right;margin-bottom: 0"></div>
+                </div>
                 <div id="match-parent-link-form" class="row-simple" style="width:100%">
 
                     <div class="column" style="width:75%;margin-bottom:-35px">
@@ -252,7 +267,7 @@
                                 <div type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</div>
                             </div>
                             <div id="parent-link-2222" style="display:flex;align-items:center; ">
-                                <div class="link-command" style="width:78%; display:flex; align-items:center">
+                                <div class="link-command" style="width:78%; display:flex; align-items:center">//
                                     Some test command
                                 </div>
                                 <div type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</div>
@@ -291,6 +306,21 @@
         </div>
     </div>
 </div>
+
+<style>
+    .gp-blue-pin {
+        float: right;
+        margin-top: 10px;
+        width: fit-content;
+        position: absolute;
+    }
+    .section-profile .gp-blue-pin img {
+        background: none;
+        border: none;
+        height: 18px;
+        margin: 5px;
+    }
+</style>
 
 <script src="/gameboard/js/gameboard.js"></script>
 
