@@ -277,20 +277,6 @@ class GameboardApi(BaseService):
             return parent_pids
         return None
 
-        # self.get_service('response_svc').apply_adversary_config()
-        # autocollect_adv = self.get_service('response_svc').adversary.adversary_id
-        # for blue_op in [op for op in (await self.data_svc.locate('operations', match=dict(access=self.Access.BLUE)))
-        #                 if op.adversary.adversary_id == autocollect_adv]:
-        #     for lnk in blue_op.chain:
-        #         if self._get_fact_value(lnk, 'host.process.childid') == target_pid and \
-        #                 self._get_fact_value(lnk, 'host.process.id'):
-        #             link.pin = int(self._get_fact_value(lnk, 'host.process.id'))
-        #             return str(link.pin)
-        #         elif self._get_fact_value(lnk, 'host.process.grandchildid') == target_pid and \
-        #                 self._get_fact_value(lnk, 'host.process.childid'):
-        #             target_pid = self._get_fact_value(lnk, 'host.process.childid')
-        #             return await self._match_child_process(target_pid, link)
-
     @staticmethod
     def _get_fact_value(link, trait):
         for fact in (link.facts + link.used):
