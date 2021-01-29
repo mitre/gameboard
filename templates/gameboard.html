@@ -239,7 +239,7 @@
                 </div>
                 <strong id="pin-blue-link-modal-link-name" style="color: white">Find Child Process</strong><br><br>
                 <div style="color: white;width: 40%;margin: auto;margin-top: 10px; margin-bottom: 30px">Determine if the PID to match is the top-level ability's PID or a PID of one of its child processes, and then enter the PID to match for.</div>
-                <div id="pin-blue-link-form" class="row-simple" style="width: 60%;margin: auto; display: flex;justify-content: center">
+                <div id="pin-blue-link-form" class="row-simple">
                     <div class="toggle" onclick="toggleParentChild()" style="margin-top: 3px;width: 25%;margin-left: 20px">
                         <label class="switch"><input type="checkbox" id="togBtnParentChild" >
                             <div class="slider round" style="background-color:black">
@@ -248,7 +248,7 @@
                             </div>
                         </label>
                     </div>
-                    <select id="pin-link-host-select" style="width:40%; margin: 5px;margin-right:30px;display: none">
+                    <select id="pin-link-host-select">
                         <option value="" disabled="disabled" selected>Select a host</option>
                         {% for host in hosts %}
                             <option id="pin-select-{{ host }}" value="{{ host }}">{{ host }}</option>
@@ -301,24 +301,9 @@
 
 <div id="parent-link-ability-select-template" style="display: flex;align-items: center;display: none">
     <input class="parent-link-pid" type="hidden" value="">
-    <div class="link-command" style="width: 78%;display: flex;align-items: center;margin: 5px"></div>
+    <div class="link-command"></div>
     <button type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</button>
 </div>
-
-<style>
-    .gp-blue-pin {
-        float: right;
-        margin-top: 10px;
-        width: fit-content;
-        position: absolute;
-    }
-    .section-profile .gp-blue-pin img {
-        background: none;
-        border: none;
-        height: 18px;
-        margin: 5px;
-    }
-</style>
 
 <script src="/gameboard/js/gameboard.js"></script>
 

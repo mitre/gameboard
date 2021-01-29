@@ -291,3 +291,33 @@ button.pin-save {
 #guid-select-duk-icon:hover #guid-select-duk-text {
     visibility: visible;
 }
+.gp-blue-pin {
+    float: right;
+    margin-top: 10px;
+    width: fit-content;
+    position: absolute;
+}
+.section-profile .gp-blue-pin img {
+    background: none;
+    border: none;
+    height: 18px;
+    margin: 5px;
+}
+#pin-blue-link-form {
+    width: 60%;
+    margin: auto;
+    display: flex;
+    justify-content: center;
+}
+#pin-link-host-select {
+    width:40%;
+    margin: 5px;
+    margin-right: 30px;
+    display: none;
+}
+.link-command {
+    width: 78%;
+    display: flex;
+    align-items: center;
+    margin: 5px;
+}

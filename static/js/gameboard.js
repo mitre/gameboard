@@ -410,7 +410,6 @@ function savePin() {
     }
     restRequest('POST', {'link_id': id.value, 'updated_pin': pin.value, 'is_child_pid': is_child_pid, 'host': host}, updatedPin, '/plugin/gameboard/pin');
     refresh();
-    asdf;
 }
 
 function addCollapsible(header, contents) {
