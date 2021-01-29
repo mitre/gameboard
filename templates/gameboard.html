@@ -239,8 +239,8 @@
                 </div>
                 <strong id="pin-blue-link-modal-link-name" style="color: white">Find Child Process</strong><br><br>
                 <div style="color: white;width: 40%;margin: auto;margin-top: 10px; margin-bottom: 30px">Determine if the PID to match is the top-level ability's PID or a PID of one of its child processes, and then enter the PID to match for.</div>
-                <div id="pin-blue-link-form" class="row-simple" style="width: 40%;margin: auto; display: flex">
-                    <div class="toggle" style="margin-top: 3px;width: 40%">
+                <div id="pin-blue-link-form" class="row-simple" style="width: 60%;margin: auto; display: flex;justify-content: center">
+                    <div class="toggle" onclick="toggleParentChild()" style="margin-top: 3px;width: 25%;margin-left: 20px">
                         <label class="switch"><input type="checkbox" id="togBtnParentChild" >
                             <div class="slider round" style="background-color:black">
                                 <span class="on" style="top:45%"><b style="font-size:13px">Child</b></span>
@@ -248,31 +248,23 @@
                             </div>
                         </label>
                     </div>
-                    <input class="pin" type="text" id="piece-pin-input" placeholder="PID" style="width: 45%;margin-top: 5px">
+                    <select id="pin-link-host-select" style="width:40%; margin: 5px;margin-right:30px;display: none">
+                        <option value="" disabled="disabled" selected>Select a host</option>
+                        {% for host in hosts %}
+                            <option id="pin-select-{{ host }}" value="{{ host }}">{{ host }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="pin" type="text" id="piece-pin-input" placeholder="PID" style="width: 28%;margin-top: 5px">
                     <input id="pin-modal-link-id" type="hidden">
                 </div>
                 <div id="pin-blue-link-submit-wrapper" style="display: flex">
-                    <div id="pin-blue-link-submit" class="button-success atomic-button" onclick="savePin()" style="width: 15%;display: flex;align-items: center;justify-content: center;margin-left: 43%;margin-top: 10px">Submit</div>
+                    <button id="pin-blue-link-submit" class="button-success atomic-button" onclick="savePin()" style="width: 15%;display: flex;align-items: center;justify-content: center;margin-left: 43%;margin-top: 10px">Submit</button>
                     <div class="save-msg" id="save-pin-msg" style="display: none;float: right;margin-bottom: 0"></div>
                 </div>
                 <div id="match-parent-link-form" class="row-simple" style="width:100%">
-
                     <div class="column" style="width:75%;margin-bottom:-35px">
                         Select the correct ability to match with.
-                        <div id="parent-links" class="column" style="flex:60%">
-                            <div id="parent-link-123456" style="display:flex;align-items:center; ">
-                                <div class="link-command" style="width:78%; display:flex; align-items:center">
-                                    Some test command
-                                </div>
-                                <div type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</div>
-                            </div>
-                            <div id="parent-link-2222" style="display:flex;align-items:center; ">
-                                <div class="link-command" style="width:78%; display:flex; align-items:center">//
-                                    Some test command
-                                </div>
-                                <div type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</div>
-                            </div>
-                        </div>
+                        <div id="parent-links" class="column" style="flex:60%"></div>
                     </div>
                 </div>
             </div>
@@ -305,6 +297,12 @@
             <button class="button-success atomic-button pin-save" id="analytic-save" onclick="createAnalytic()">Create Analytic</button>
         </div>
     </div>
+</div>
+
+<div id="parent-link-ability-select-template" style="display: flex;align-items: center;display: none">
+    <input class="parent-link-pid" type="hidden" value="">
+    <div class="link-command" style="width: 78%;display: flex;align-items: center;margin: 5px"></div>
+    <button type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</button>
 </div>
 
 <style>

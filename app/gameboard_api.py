@@ -65,18 +65,22 @@ class GameboardApi(BaseService):
         data = dict(await request.json())
         link = await self.app_svc.find_link(str(data['link_id']))
         if data['is_child_pid']:
-            result = await self._match_child_process(int(data['updated_pin']), link)
+            host = data.get('host')
+            if not host:
+                return web.json_response(dict(message='Host not selected', multiple_links=False))
+            result = await self._match_child_process(int(data['updated_pin']), host)
             if result and len(result) == 1:
                 link.pin = result[0]
-                return web.json_response('Pinned to parent PID: ' + result)
+                return web.json_response(dict(message='Pinned to parent PID: ' + str(result[0]), multiple_links=False))
             elif result and len(result) > 1:
-                # TODO: send information back to verify which link to match
-                return web.json_response('multiple pids')
+                links = await self._pids_to_links(result, host)
+                return web.json_response(dict(message='Select the correct ability below', multiple_links=True,
+                                              links=links))
             else:
-                return web.json_response('Child PID not matched to any parent PIDs')
+                return web.json_response(dict(message='Child PID not matched to any parent PIDs', multiple_links=False))
         else:
             link.pin = int(data['updated_pin'])
-            return web.json_response('Pinned to PID: ' + str(data['updated_pin']))
+            return web.json_response(dict(message='Pinned to PID: ' + str(data['updated_pin']), multiple_links=False))
 
     async def verify_detection(self, request):
         data = dict(await request.json())
@@ -259,16 +263,16 @@ class GameboardApi(BaseService):
         await self.rest_svc.create_operation(access=access, data=data)
         return data
 
-    async def _match_child_process(self, target_pid, link):
+    async def _match_child_process(self, target_pid, host):
         processtree = await self.data_svc.locate('processtrees')
         if processtree:
-            parent_pids = await processtree[0].find_original_processes_by_pid(target_pid, link.host)
+            parent_pids = await processtree[0].find_original_processes_by_pid(target_pid, host)
             if parent_pids and len(parent_pids) > 1:
                 matches = []
                 ops = [op for op in (await self.data_svc.locate('operations')) if op.access is not self.Access.BLUE]
                 for link in [lnk for op in ops for lnk in op.chain]:
                     if link.pid in parent_pids:
-                        matches.append(link.display)
+                        matches.append(link.pid)
                 return matches
             return parent_pids
         return None
@@ -286,7 +290,6 @@ class GameboardApi(BaseService):
         #                 self._get_fact_value(lnk, 'host.process.childid'):
         #             target_pid = self._get_fact_value(lnk, 'host.process.childid')
         #             return await self._match_child_process(target_pid, link)
-        return None
 
     @staticmethod
     def _get_fact_value(link, trait):
@@ -294,3 +297,13 @@ class GameboardApi(BaseService):
             if fact.trait == trait:
                 return fact.value
         return None
+
+    async def _pids_to_links(self, pids, host):
+        target_links = []
+        red_ops = await self.data_svc.locate('operations', match=dict(access=self.Access.RED))
+        all_links = [link for op in red_ops for link in op.chain]
+        for pid in pids:
+            for link in all_links:
+                if link.pid == pid and link.host == host:
+                    target_links.append(link.display)
+        return target_links

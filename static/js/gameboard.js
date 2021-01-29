@@ -373,16 +373,42 @@ function generateELKQuery(field, value) {
 
 function savePin() {
     function updatedPin(data) {
-        $('#save-pin-msg').text(data).show().fadeOut(2000);
+        $('#save-pin-msg').text(data['message']).show().fadeOut(2000);
+        if (data['multiple_links'] === true) {
+            let links = data['links'];
+            for (let i=0; i<links.length;i++) {
+                let template = $("#parent-link-ability-select-template").clone();
+                template.find(".parent-link-pid").val(links[i].pid);
+                template.find(".link-command").text(atob(links[i].command))
+                template.find(".atomic-button").on('click', function () { selectParentLinkAbility($('#pin-modal-link-id').val(), $(this)) })
+                template.attr("id", "parent-link-ability-" + links[i].id);
+                template.css('display', 'flex');
+                if (i > 0) {
+                    template.css('border-top', 'solid');
+                    template.css('border-width', '1px');
+                }
+                $("#parent-links").append(template);
+            }
+            $("#match-parent-link-form").css('display', 'flex')
+        }
     }
     let pin = document.getElementById('piece-pin-input');
     if (isNaN(pin.value)) {
         $('#save-pin-msg').text('Input is not a number').show().fadeOut(2000);
         return
     }
+
+    $("#parent-links").empty();
+    $("#match-parent-link-form").css('display', 'none');
+
     let id = document.getElementById('pin-modal-link-id');
     let is_child_pid = $('#togBtnParentChild').is(':checked');
-    restRequest('PUT', {'link_id': id.value, 'updated_pin': pin.value, 'is_child_pid': is_child_pid}, updatedPin, '/plugin/gameboard/pin');
+    let host_val = $('#pin-link-host-select').val();
+    let host = null
+    if (host_val !== "") {
+        host = host_val;
+    }
+    restRequest('POST', {'link_id': id.value, 'updated_pin': pin.value, 'is_child_pid': is_child_pid, 'host': host}, updatedPin, '/plugin/gameboard/pin');
     refresh();
     asdf;
 }
@@ -492,4 +518,24 @@ function openPinBlueLinkModal(exchanges, elem){
     let exchange = findExchange(exchanges, id[1]);
     let link = exchange[id[2]][id[3]];
     $('#pin-modal-link-id').val(link['id']);
+}
+
+function toggleParentChild() {
+    if ($('#togBtnParentChild').is(':checked')) {
+        $('#pin-link-host-select').css('display', 'block');
+    } else {
+        $('#pin-link-host-select').css('display', 'none');
+    }
+}
+
+function selectParentLinkAbility(child_link_id, button) {
+    function selectParentLinkAbilityCallback(data) {
+        $("#parent-links").empty();
+        $("#match-parent-link-form").css('display', 'none');
+        $('#save-pin-msg').text(data['message']).show().fadeOut(2000);
+    }
+
+    let parent_link_pid = $(button).parent().find(".parent-link-pid").val();
+    restRequest('POST', {'link_id': child_link_id, 'updated_pin': parent_link_pid, 'is_child_pid': false}, selectParentLinkAbilityCallback, '/plugin/gameboard/pin');
+    refresh();
 }

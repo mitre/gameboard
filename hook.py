@@ -16,7 +16,7 @@ async def enable(services):
     app.router.add_static('/gameboard', 'plugins/gameboard/static/', append_version=True)
     app.router.add_route('GET', '/plugin/gameboard/gui', gameboard_api.splash)
     app.router.add_route('POST', '/plugin/gameboard/pieces', gameboard_api.get_pieces)
-    app.router.add_route('PUT', '/plugin/gameboard/pin', gameboard_api.update_pin)
+    app.router.add_route('POST', '/plugin/gameboard/pin', gameboard_api.update_pin)
     app.router.add_route('POST', '/plugin/gameboard/analytic', gameboard_api.analytic)
     app.router.add_route('POST', '/plugin/gameboard/detection', gameboard_api.verify_detection)
 
@@ -24,11 +24,12 @@ async def enable(services):
 async def expansion(services):
     data_svc = services.get('data_svc')
     await _apply_hidden_access_to_loaded_files(data_svc)
-    test_processtree, red_op, blue_op = await create_test_processtree_and_ops()
+    test_processtree, agent, red_op, blue_op = await create_test_processtree_and_ops()
     planner = (await services.get('data_svc').locate('planners', match=dict(name='atomic')))[0]
     red_op.planner = planner
     blue_op.planner = planner
     await data_svc.store(test_processtree)
+    await data_svc.store(agent)
     await data_svc.store(red_op)
     await data_svc.store(blue_op)
 
