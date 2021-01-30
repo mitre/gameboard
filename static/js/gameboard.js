@@ -41,6 +41,8 @@ function refresh(){
         if (redOpState !== null || blueOpState !== null) {
             $('#gameboard-add-manual-detection-div').css('display', 'block');
         }
+
+        updateStatsTable(exchanges);
     }
 
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
@@ -476,4 +478,22 @@ function buildAnalyticData() {
 
 function handleAnalyticCallback(data){
     stream('Operation started, just wait a minute to see results.');
+}
+
+function updateStatsTable(exchanges){
+    let true_pos = 0;
+    let false_pos = 0;
+    let false_neg = 0;
+    exchanges.forEach(function(exchange) {
+        if (exchange[1]['red'].length === 0) {
+            false_pos += exchange[1]['blue'].length;
+        } else if (exchange[1]['blue'].length === 0) {
+            false_neg += exchange[1]['red'].length;
+        } else {
+            true_pos += exchange[1]['blue'].length;
+        }
+    });
+    $("#gb-stats-table-true td:nth-child(2)").text(true_pos);
+    $("#gb-stats-table-false td:nth-child(2)").text(false_pos);
+    $("#gb-stats-table-false td:nth-child(3)").text(false_neg);
 }
