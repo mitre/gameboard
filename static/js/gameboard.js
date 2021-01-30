@@ -25,6 +25,7 @@ function refresh(){
         updateOpState('blue', blueOpState);
         updatePoints(data.points);
         updateExchanges(exchanges, access);
+        updateStatsTable(exchanges);
 
         $('.golden-goose').on('click', function () { getLinkInfo(exchanges, $(this)) })
 
@@ -41,8 +42,6 @@ function refresh(){
         if (redOpState !== null || blueOpState !== null) {
             $('#gameboard-add-manual-detection-div').css('display', 'block');
         }
-
-        updateStatsTable(exchanges);
     }
 
     let redOpId = parseInt($('#red-operations option:selected').attr('value'));
