@@ -291,7 +291,7 @@ button.pin-save {
 #guid-select-duk-icon:hover #guid-select-duk-text {
     visibility: visible;
 }
-#gb-stats-table th, td {
+.gb-stats-table-row > th {
     padding-left: 15px;
     padding-right: 15px;
     padding-top: 8px;
@@ -299,7 +299,12 @@ button.pin-save {
     border: 1px solid white;
     text-align: center;
 }
-#gb-stats-table td {
+.gb-stats-table-row > td {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border: 1px solid white;
+    text-align: center;
     font-weight: bold;
-    font-size: 24px;
 }

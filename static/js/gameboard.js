@@ -492,7 +492,8 @@ function updateStatsTable(exchanges){
             true_pos += exchange[1]['blue'].length;
         }
     });
-    $("#gb-stats-table-true td:nth-child(2)").text(true_pos);
-    $("#gb-stats-table-false td:nth-child(2)").text(false_pos);
-    $("#gb-stats-table-false td:nth-child(3)").text(false_neg);
+    let total = true_pos + false_pos + false_neg;
+    $("#gb-stats-table-true td:nth-child(2)").text((true_pos/total)*100 + '%');
+    $("#gb-stats-table-false td:nth-child(2)").text((false_pos/total)*100 + '%');
+    $("#gb-stats-table-false td:nth-child(3)").text((false_neg/total)*100 + '%');
 }
