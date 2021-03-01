@@ -64,10 +64,12 @@ class GameboardApi(BaseService):
     async def update_pin(self, request):
         data = dict(await request.json())
         link = await self.app_svc.find_link(str(data['link_id']))
+
         if data['is_child_pid']:
             host = data.get('host')
             if not host:
                 return web.json_response(dict(message='Host not selected', multiple_links=False))
+
             matches = await self._match_child_process(int(data['updated_pin']), host)
             if len(matches) == 1:
                 link.pin = matches[0]
@@ -78,6 +80,7 @@ class GameboardApi(BaseService):
                                               links=links))
             else:
                 return web.json_response(dict(message='Child PID not matched to any parent PIDs', multiple_links=False))
+
         else:
             link.pin = int(data['updated_pin'])
             return web.json_response(dict(message='Pinned to PID: ' + str(data['updated_pin']), multiple_links=False))
