@@ -271,14 +271,17 @@ class GameboardApi(BaseService):
         if processtree:
             parent_pids = await processtree[0].find_original_processes_by_pid(target_pid, host)
             if parent_pids and len(parent_pids) > 1:
-                matches = []
-                ops = [op for op in (await self.data_svc.locate('operations')) if op.access is not self.Access.BLUE]
-                for link in [lnk for op in ops for lnk in op.chain]:
-                    if link.pid in parent_pids:
-                        matches.append(link.pid)
-                return matches
+                return self._handle_multiple_parent_pids_for_child_pid(parent_pids)
             return parent_pids
         return []
+
+    async def _handle_multiple_parent_pids_for_child_pid(self, parent_pids):
+        matches = []
+        ops = [op for op in (await self.data_svc.locate('operations')) if op.access is not self.Access.BLUE]
+        for link in [lnk for op in ops for lnk in op.chain]:
+            if link.pid in parent_pids:
+                matches.append(link.pid)
+        return matches
 
     @staticmethod
     def _get_fact_value(link, trait):
