@@ -68,12 +68,12 @@ class GameboardApi(BaseService):
             host = data.get('host')
             if not host:
                 return web.json_response(dict(message='Host not selected', multiple_links=False))
-            result = await self._match_child_process(int(data['updated_pin']), host)
-            if result and len(result) == 1:
-                link.pin = result[0]
-                return web.json_response(dict(message='Pinned to parent PID: ' + str(result[0]), multiple_links=False))
-            elif result and len(result) > 1:
-                links = await self._pids_to_links(result, host)
+            matches = await self._match_child_process(int(data['updated_pin']), host)
+            if len(matches) == 1:
+                link.pin = matches[0]
+                return web.json_response(dict(message='Pinned to parent PID: ' + str(matches[0]), multiple_links=False))
+            elif len(matches) > 1:
+                links = await self._pids_to_links(matches, host)
                 return web.json_response(dict(message='Select the correct ability below', multiple_links=True,
                                               links=links))
             else:
@@ -275,7 +275,7 @@ class GameboardApi(BaseService):
                         matches.append(link.pid)
                 return matches
             return parent_pids
-        return None
+        return []
 
     @staticmethod
     def _get_fact_value(link, trait):
