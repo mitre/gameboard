@@ -271,7 +271,7 @@ class GameboardApi(BaseService):
         if processtree:
             parent_pids = await processtree[0].find_original_processes_by_pid(target_pid, host)
             if parent_pids and len(parent_pids) > 1:
-                return self._handle_multiple_parent_pids_for_child_pid(parent_pids)
+                return await self._handle_multiple_parent_pids_for_child_pid(parent_pids)
             return parent_pids
         return []
 
