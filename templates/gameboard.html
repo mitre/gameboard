@@ -228,14 +228,14 @@
                 <div onclick="document.getElementById('pin-blue-link-modal').style.display='none'">
                     <span class="close" title="Close Modal">&times;</span>
                 </div>
-                <strong id="pin-blue-link-modal-link-name" style="color: white">Find Child Process</strong><br><br>
-                <div style="color: white;width: 40%;margin: auto;margin-top: 10px; margin-bottom: 30px">Determine if the PID to match is the top-level ability's PID or a PID of one of its child processes, and then enter the PID to match for.</div>
+                <strong id="pin-blue-link-modal-link-name">Find Child Process</strong><br><br>
+                <div id="pin-blue-link-modal-desc-text">Determine if the PID to match is the top-level ability's PID or a PID of one of its child processes, and then enter the PID to match for.</div>
                 <div id="pin-blue-link-form" class="row-simple">
-                    <div class="toggle" onclick="toggleParentChild()" style="margin-top: 3px;width: 25%;margin-left: 20px">
+                    <div class="toggle" onclick="toggleParentChild()">
                         <label class="switch"><input type="checkbox" id="togBtnParentChild" >
-                            <div class="slider round" style="background-color:black">
-                                <span class="on" style="top:45%"><b style="font-size:13px">Child</b></span>
-                                <span class="off" style="top:45%"><b style="font-size:13px">Parent</b></span>
+                            <div class="slider round">
+                                <span class="on" style="top:45%"><b>Child</b></span>
+                                <span class="off" style="top:45%"><b>Parent</b></span>
                             </div>
                         </label>
                     </div>
@@ -245,15 +245,15 @@
                             <option id="pin-select-{{ host }}" value="{{ host }}">{{ host }}</option>
                         {% endfor %}
                     </select>
-                    <input class="pin" type="text" id="piece-pin-input" placeholder="PID" style="width: 28%;margin-top: 5px">
+                    <input class="pin" type="text" id="piece-pin-input" placeholder="PID">
                     <input id="pin-modal-link-id" type="hidden">
                 </div>
                 <div id="pin-blue-link-submit-wrapper" style="display: flex">
-                    <button id="pin-blue-link-submit" class="button-success atomic-button" onclick="savePin()" style="width: 15%;display: flex;align-items: center;justify-content: center;margin-left: 43%;margin-top: 10px">Submit</button>
-                    <div class="save-msg" id="save-pin-msg" style="display: none;float: right;margin-bottom: 0"></div>
+                    <button id="pin-blue-link-submit" class="button-success atomic-button" onclick="savePin()">Submit</button>
+                    <div class="save-msg" id="save-pin-msg"></div>
                 </div>
                 <div id="match-parent-link-form" class="row-simple" style="width:100%">
-                    <div class="column" style="width:75%;margin-bottom:-35px">
+                    <div id="match-parent-link-form-contents" class="column">
                         Select the correct ability to match with.
                         <div id="parent-links" class="column" style="flex:60%"></div>
                     </div>

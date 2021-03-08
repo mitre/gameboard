@@ -371,27 +371,28 @@ function generateELKQuery(field, value) {
     return 'event_data.' + field + ': ' + value;
 }
 
-function savePin() {
-    function updatedPin(data) {
-        $('#save-pin-msg').text(data['message']).show().fadeOut(2000);
-        if (data['multiple_links'] === true) {
-            let links = data['links'];
-            for (let i=0; i<links.length;i++) {
-                let template = $("#parent-link-ability-select-template").clone();
-                template.find(".parent-link-pid").val(links[i].pid);
-                template.find(".link-command").text(atob(links[i].command))
-                template.find(".atomic-button").on('click', function () { selectParentLinkAbility($('#pin-modal-link-id').val(), $(this)) })
-                template.attr("id", "parent-link-ability-" + links[i].id);
-                template.css('display', 'flex');
-                if (i > 0) {
-                    template.css('border-top', 'solid');
-                    template.css('border-width', '1px');
-                }
-                $("#parent-links").append(template);
+function updatedPin(data) {
+    $('#save-pin-msg').text(data['message']).show().fadeOut(2000);
+    if (data['multiple_links'] === true) {
+        let links = data['links'];
+        for (let i=0; i<links.length; i++) {
+            let template = $("#parent-link-ability-select-template").clone();
+            template.find(".parent-link-pid").val(links[i].pid);
+            template.find(".link-command").text(atob(links[i].command))
+            template.find(".atomic-button").on('click', function () { selectParentLinkAbility($('#pin-modal-link-id').val(), $(this)) })
+            template.attr("id", "parent-link-ability-" + links[i].id);
+            template.css('display', 'flex');
+            if (i > 0) {
+                template.css('border-top', 'solid');
+                template.css('border-width', '1px');
             }
-            $("#match-parent-link-form").css('display', 'flex')
+            $("#parent-links").append(template);
         }
+        $("#match-parent-link-form").css('display', 'flex')
     }
+}
+
+function savePin() {
     let pin = document.getElementById('piece-pin-input');
     if (isNaN(pin.value)) {
         $('#save-pin-msg').text('Input is not a number').show().fadeOut(2000);

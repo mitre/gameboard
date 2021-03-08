@@ -321,3 +321,45 @@ button.pin-save {
     align-items: center;
     margin: 5px;
 }
+#pin-blue-link-modal-link-name {
+    color: white;
+}
+#pin-blue-link-modal-desc-text {
+    color: white;
+    width: 40%;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+#pin-blue-link-form .toggle {
+    margin-top: 3px;
+    width: 25%;
+    margin-left: 20px;
+}
+#pin-blue-link-form .slider round {
+    background-color:black;
+}
+#pin-blue-link-form span b {
+    font-size: 13px;
+}
+#piece-pin-input {
+    width: 28%;
+    margin-top: 5px;
+}
+#pin-blue-link-submit {
+    width: 15%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 43%;
+    margin-top: 10px;
+}
+#pin-blue-link-submit-wrapper #save-pin-msg {
+    display: none;
+    float: right;
+    margin-bottom: 0;
+}
+#match-parent-link-form-contents {
+    width:75%;
+    margin-bottom:-35px;
+}
