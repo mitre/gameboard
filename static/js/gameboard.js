@@ -25,6 +25,7 @@ function refresh(){
         updateOpState('blue', blueOpState);
         updatePoints(data.points);
         updateExchanges(exchanges, access);
+        updateStatsTable(exchanges);
 
         $('.golden-goose').on('click', function () { getLinkInfo(exchanges, $(this)) })
 
@@ -476,4 +477,23 @@ function buildAnalyticData() {
 
 function handleAnalyticCallback(data){
     stream('Operation started, just wait a minute to see results.');
+}
+
+function updateStatsTable(exchanges){
+    let true_pos = 0;
+    let false_pos = 0;
+    let false_neg = 0;
+    exchanges.forEach(function(exchange) {
+        if (exchange[1]['red'].length === 0) {
+            false_pos += exchange[1]['blue'].length;
+        } else if (exchange[1]['blue'].length === 0) {
+            false_neg += exchange[1]['red'].length;
+        } else {
+            true_pos += exchange[1]['blue'].length;
+        }
+    });
+    let total = true_pos + false_pos + false_neg;
+    $("#gb-stats-table-true td:nth-child(2)").text((true_pos/total)*100 + '%');
+    $("#gb-stats-table-false td:nth-child(2)").text((false_pos/total)*100 + '%');
+    $("#gb-stats-table-false td:nth-child(3)").text((false_neg/total)*100 + '%');
 }

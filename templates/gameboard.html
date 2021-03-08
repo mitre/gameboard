@@ -28,6 +28,26 @@
             <p id="blue-status" class="status" style="display: None"></p>
             <br>
             <button class="button-success button-atomic" onclick="refresh()">Refresh</button>
+            <div id="gb-stats-table-wrapper" style="width: 200px;text-align: center;margin-left: 30px;margin-bottom: 20px">
+                <h2>Stats</h2>
+                <table id="gb-stats-table" style="border-collapse: collapse">
+                    <tr id="gb-stats-table-header" class="gb-stats-table-row" style="color: white">
+                        <th></th>
+                        <th>Pos</th>
+                        <th>Neg</th>
+                    </tr>
+                    <tr id="gb-stats-table-true" class="gb-stats-table-row" style="color: cornflowerblue">
+                        <th>True</th>
+                        <td>0%</td>
+                        <td style="font-weight: normal;font-size: 18px">N/A</td>
+                    </tr>
+                    <tr id="gb-stats-table-false" class="gb-stats-table-row" style="color: orangered">
+                        <th>False</th>
+                        <td>0%</td>
+                        <td>0%</td>
+                    </tr>
+                </table>
+            </div>
             <button class="button-success button-atomic" id="elastic-op" onclick="openAnalyticModal()">Custom Analytic</button>
         </div>
         <div id="the-gameboard" class="column">
@@ -237,7 +257,7 @@
         </div>
         <div class="container" style="text-align:left; padding: 10px 50px 100px;">
             <div class="column" style="margin: 20px 0px;">
-                <table style="border-spacing:2px;width:100%;" rules="rows">
+                <table style="border-spacing:2px;width:100%" rules="rows">
                     <tbody>
                         <tr>
                             <td style="width: 10%;"><b>Name:</b></td>
