@@ -291,6 +291,23 @@ button.pin-save {
 #guid-select-duk-icon:hover #guid-select-duk-text {
     visibility: visible;
 }
+.gb-stats-table-row > th {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border: 1px solid white;
+    text-align: center;
+}
+.gb-stats-table-row > td {
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    border: 1px solid white;
+    text-align: center;
+    font-weight: bold;
+}
 .gp-blue-pin {
     float: right;
     margin-top: 10px;
