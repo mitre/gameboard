@@ -73,7 +73,7 @@ class GameboardApi(BaseService):
             matches = await self._match_child_process(int(data['updated_pin']), host)
             if len(matches) == 1:
                 link.pin = matches[0]
-                return web.json_response(dict(message='Pinned to parent PID: {}'.format(str(link.pin)),
+                return web.json_response(dict(message='Pinned to parent PID: {}'.format(link.pin),
                                               multiple_links=False))
             elif len(matches) > 1:
                 links = await self._pids_to_links(matches, host)
@@ -84,7 +84,7 @@ class GameboardApi(BaseService):
 
         else:
             link.pin = int(data['updated_pin'])
-            return web.json_response(dict(message='Pinned to PID: {}'.format(str(data['updated_pin'])),
+            return web.json_response(dict(message='Pinned to PID: {}'.format(data['updated_pin']),
                                           multiple_links=False))
 
     async def verify_detection(self, request):
