@@ -509,7 +509,6 @@ function handleAnalyticCallback(data){
     stream('Operation started, just wait a minute to see results.');
 }
 
-<<<<<<< HEAD
 function openPinBlueLinkModal(exchanges, elem){
     let piece = $(elem).parent();
     let modal = $("#pin-blue-link-modal");
@@ -541,6 +540,7 @@ function selectParentLinkAbility(child_link_id, button) {
     restRequest('POST', {'link_id': child_link_id, 'updated_pin': parent_link_pid, 'is_child_pid': false}, selectParentLinkAbilityCallback, '/plugin/gameboard/pin');
     refresh();
 }
+
 function updateStatsTable(exchanges){
     let true_pos = 0;
     let false_pos = 0;
