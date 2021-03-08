@@ -269,9 +269,9 @@ class GameboardApi(BaseService):
         return data
 
     async def _match_child_process(self, target_pid, host):
-        processtree = await self.data_svc.locate('processtrees')
+        processtree = await self.data_svc.locate('processtrees', match=dict(host=host))
         if processtree:
-            parent_pids = await processtree[0].find_original_processes_by_pid(target_pid, host)
+            parent_pids = await processtree[0].find_original_processes_by_pid(target_pid)
             if parent_pids and len(parent_pids) > 1:
                 return await self._handle_multiple_parent_pids_for_child_pid(parent_pids)
             return parent_pids
