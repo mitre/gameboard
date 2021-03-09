@@ -97,6 +97,7 @@
     <span class="gp-agent"></span>
 </div>
 <div id="blue-piece" class="gameboard-column gp-blue" style="display:none">
+    <span class="gp-blue-pin" style="cursor: pointer"><img class="gp-blue-pin-img" src="/gameboard/img/pin.png"/></span>
     <span class="golden-goose"><span></span></span>
     <span class="gp-ability"></span>
     <span class="gp-time"></span>
@@ -133,13 +134,6 @@
                             <td><div id="piece-ability" style="padding: 10px 0px;"></div></td>
                         </tr>
                         <tr>
-                            <td style="width: 10%;"><b>Pinned PID:</b></td>
-                            <td>
-                                <input class="pin" type="text" id="piece-pin" placeholder="PID">
-                                <div style="padding: 10px 0px; display: none" id="piece-pid"></div>
-                            </td>
-                        </tr>
-                        <tr>
                             <td style="width:10%"><b>Command:</b></td>
                             <td><pre id="piece-cmd" style="margin: 10px 0px;"></pre></td>
                         </tr>
@@ -163,9 +157,6 @@
                     <pre id="default-query" style="display: none"></pre>
                 </div>
             </div>
-            <button class="button-success atomic-button pin-save" id="pin-save" onclick="savePin()">Save</button>
-            <div class="save-msg" id="save-pin-msg" style="display: none"></div>
-
         </div>
     </div>
 </div>
@@ -250,6 +241,48 @@
     </div>
 </div>
 
+<div id="pin-blue-link-modal" class="modal" style="display: none">
+    <div class="modal-content" style="width:60%">
+        <div class="container">
+            <div class="row duk-modal" style="display:block">
+                <div onclick="document.getElementById('pin-blue-link-modal').style.display='none'">
+                    <span class="close" title="Close Modal">&times;</span>
+                </div>
+                <strong id="pin-blue-link-modal-link-name">Find Child Process</strong><br><br>
+                <div id="pin-blue-link-modal-desc-text">Determine if the PID to match is the top-level ability's PID or a PID of one of its child processes, and then enter the PID to match for.</div>
+                <div id="pin-blue-link-form" class="row-simple">
+                    <div class="toggle" onclick="toggleParentChild()">
+                        <label class="switch"><input type="checkbox" id="togBtnParentChild" >
+                            <div class="slider round">
+                                <span class="on" style="top:45%"><b>Child</b></span>
+                                <span class="off" style="top:45%"><b>Parent</b></span>
+                            </div>
+                        </label>
+                    </div>
+                    <select id="pin-link-host-select">
+                        <option value="" disabled="disabled" selected>Select a host</option>
+                        {% for host in hosts %}
+                            <option id="pin-select-{{ host }}" value="{{ host }}">{{ host }}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="pin" type="text" id="piece-pin-input" placeholder="PID">
+                    <input id="pin-modal-link-id" type="hidden">
+                </div>
+                <div id="pin-blue-link-submit-wrapper" style="display: flex">
+                    <button id="pin-blue-link-submit" class="button-success atomic-button" onclick="savePin()">Submit</button>
+                    <div class="save-msg" id="save-pin-msg"></div>
+                </div>
+                <div id="match-parent-link-form" class="row-simple" style="width:100%">
+                    <div id="match-parent-link-form-contents" class="column">
+                        Select the correct ability to match with.
+                        <div id="parent-links" class="column" style="flex:60%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="analytic-op-modal" class="modal">
     <div class="modal-content ability-viewer">
         <div class="imgcontainer">
@@ -275,6 +308,12 @@
             <button class="button-success atomic-button pin-save" id="analytic-save" onclick="createAnalytic()">Create Analytic</button>
         </div>
     </div>
+</div>
+
+<div id="parent-link-ability-select-template" style="display: flex;align-items: center;display: none">
+    <input class="parent-link-pid" type="hidden" value="">
+    <div class="link-command"></div>
+    <button type="button" class="button-success atomic-button" style="width:19%; display:flex; align-items:center; justify-content:center">Select</button>
 </div>
 
 <script src="/gameboard/js/gameboard.js"></script>

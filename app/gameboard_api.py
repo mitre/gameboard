@@ -63,9 +63,29 @@ class GameboardApi(BaseService):
 
     async def update_pin(self, request):
         data = dict(await request.json())
-        link = await self.app_svc.find_link(data['link_id'])
-        link.pin = int(data['updated_pin'])
-        return web.json_response('completed')
+        link = await self.app_svc.find_link(str(data['link_id']))
+
+        if data['is_child_pid']:
+            host = data.get('host')
+            if not host:
+                return web.json_response(dict(message='Host not selected', multiple_links=False))
+
+            matches = await self._match_child_process(int(data['updated_pin']), host)
+            if len(matches) == 1:
+                link.pin = matches[0]
+                return web.json_response(dict(message='Pinned to parent PID: {}'.format(link.pin),
+                                              multiple_links=False))
+            elif len(matches) > 1:
+                links = await self._pids_to_links(matches, host)
+                return web.json_response(dict(message='Select the correct ability below', multiple_links=True,
+                                              links=links))
+            else:
+                return web.json_response(dict(message='Child PID not matched to any parent PIDs', multiple_links=False))
+
+        else:
+            link.pin = int(data['updated_pin'])
+            return web.json_response(dict(message='Pinned to PID: {}'.format(data['updated_pin']),
+                                          multiple_links=False))
 
     async def verify_detection(self, request):
         data = dict(await request.json())
@@ -247,3 +267,37 @@ class GameboardApi(BaseService):
                     planner='batch', auto_close=True)
         await self.rest_svc.create_operation(access=access, data=data)
         return data
+
+    async def _match_child_process(self, target_pid, host):
+        processtree = await self.data_svc.locate('processtrees', match=dict(host=host))
+        if processtree:
+            parent_pids = await processtree[0].find_original_processes_by_pid(target_pid)
+            if parent_pids and len(parent_pids) > 1:
+                return await self._handle_multiple_parent_pids_for_child_pid(parent_pids)
+            return parent_pids
+        return []
+
+    async def _handle_multiple_parent_pids_for_child_pid(self, parent_pids):
+        matches = []
+        ops = [op for op in (await self.data_svc.locate('operations')) if op.access is not self.Access.BLUE]
+        for link in [lnk for op in ops for lnk in op.chain]:
+            if link.pid in parent_pids:
+                matches.append(link.pid)
+        return matches
+
+    @staticmethod
+    def _get_fact_value(link, trait):
+        for fact in (link.facts + link.used):
+            if fact.trait == trait:
+                return fact.value
+        return None
+
+    async def _pids_to_links(self, pids, host):
+        target_links = []
+        red_ops = await self.data_svc.locate('operations', match=dict(access=self.Access.RED))
+        all_links = [link for op in red_ops for link in op.chain]
+        for pid in pids:
+            for link in all_links:
+                if link.pid == pid and link.host == host:
+                    target_links.append(link.display)
+        return target_links
