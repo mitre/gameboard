@@ -128,7 +128,7 @@ class GameboardApi(BaseService):
                     if fact.trait == self.PID_FACT:
                         lnk.pin = int(fact.value)
                     else:
-                        lnk.pin = self._find_original_pid(blue_ops[0].all_relationships(), fact.trait, fact.value)
+                        lnk.pin = self._find_original_pid(await blue_ops[0].all_relationships(), fact.trait, fact.value)
 
     def _add_links_to_exchanges(self, exchanges, links, team):
         for link in links:

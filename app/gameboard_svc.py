@@ -125,6 +125,8 @@ class GameboardService(BaseService):
         fact = Fact(trait='host.process.id', value=link_pid)
         link.used.append(fact)
         link.facts.append(fact)
+        knowledge_svc_handle = BaseService.get_service('knowledge_svc')
+        await knowledge_svc_handle.add_fact(fact)
         link.command = self.encode_string('The link with the PID shown below was successfully detected.')
         link.collect = datetime.now()
         link.finish = self.data_svc.get_current_timestamp()
