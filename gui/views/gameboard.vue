@@ -241,7 +241,7 @@ div
                             em.fas.fa-user.pr-3.is-red-team.is-size-2(alt="Red team")
                         .is-flex.is-flex-direction-row.is-size-1
                             div(v-text="redOperation.points < 0 ? '-' : ''")
-                            .po ints-card.has-background-black-ter.mr-2.py-1.px-2(alt="Red team points", v-text="Math.floor(Math.abs(redOperation.points / 10))")
+                            .points-card.has-background-black-ter.mr-2.py-1.px-2(alt="Red team points", v-text="Math.floor(Math.abs(redOperation.points / 10))")
                             .points-card.has-background-black-ter.py-1.px-2(alt="Red team points", v-text="Math.abs(redOperation.points % 10)")
                     label.mb-1.is-size-7(for="red-op-select") Operation
                     .select.is-small
@@ -439,8 +439,7 @@ template(v-if="modal.isOpen")
                             div
                                 .modal-form-group-header
                                     button.button.no-style.heading.pt-2(@click="expandQueries = !expandQueries", :class="expandQueries ? 'expanded' : 'collapsed'")
-                                        span
-                                        | Suggested Queries
+                                        span Suggested Queries
                                             em.fas.fa-caret-right(v-show="!expandQueries")
                                             em.fas.fa-caret-down(v-show="expandQueries")
                                         span.navbar-divider
