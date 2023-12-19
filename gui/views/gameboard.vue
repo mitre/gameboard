@@ -9,10 +9,19 @@ onMounted(async () => {});
 </script>
 
 <script>
+import { toast } from "bulma-toast";
+import {
+  getHumanFriendlyTimeISO8601,
+  b64DecodeUnicode,
+} from "@/utils/utils";
 export default {
   inject: ["$api"],
   data() {
     return {
+        redOps: [],
+        blueOps: [],
+        hosts: [],
+        allTactics: {},
         redOperation: {
             id: '',
             state: '',
@@ -48,20 +57,39 @@ export default {
         detectionID: '',
         huntResults: '',
         linkOutput: '',
+        analytic: {name: '', query: ''},
+        expandQueries: false,
+        generatedQueries: {}
     };
   },
   created() {
     this.initGameboard();
   },
+  watch: {
+    modal: {
+      handler(newVal, oldVal) {
+        if (newVal.content && newVal.content.unique && newVal.title == "Facts") {
+          this.generatedQueries = this.generateQueries(newVal.content, this.access)
+        }
+      },
+      deep: true,
+    }
+  },
   methods: {
     async initGameboard() {
-        if (this.allTactics) this.tactics = Object.keys(this.allTactics);
-        while (this.$refs.gameboardHeader) {
-            await sleep(3000);
-            this.getGameboardData();
+        try {
+            const res = await this.$api.get("/plugin/gameboard/ops");
+            this.allTactics = res.data.tactics;
+            this.hosts = res.data.hosts;
+            this.redOps = res.data.red_ops;
+            this.blueOps = res.data.blue_ops;
+        } catch (error) {
+          console.error(error);
         }
+        if (this.allTactics) this.tactics = Object.keys(this.allTactics);
+        setInterval(() => this.getGameboardData(), 3000);
     },
-    getGameboardData() {
+    async getGameboardData() {
         const render = (data) => {
             this.resetTables();
             this.redOperation.state = data.red_op_state;
@@ -81,38 +109,69 @@ export default {
             }
         };
         if (this.redOperation.id && this.blueOperation.id) {
-            restRequest('POST', {
-                red: this.redOperation.id,
-                blue: this.blueOperation.id
-            }, render, '/plugin/gameboard/pieces');
+            try {
+                const res = await this.$api.post("/plugin/gameboard/pieces", {
+                    red: this.redOperation.id,
+                    blue: this.blueOperation.id
+                });
+                render(res.data);
+            } catch (error) {
+                console.error(error);
+            }
         }
     },
     handleTacticChange() {
         if (this.selectedTactic && this.selectedTactic in this.allTactics) {
             this.techniques = this.allTactics[this.selectedTactic];
         } else {
-            toast('No techniques available for this tactic.', false);
+            toast({
+              message: "No techniques available for this tactic.",
+              position: "bottom-right",
+              type: "is-warning",
+              dismissible: true,
+              pauseOnHover: true,
+              duration: 2000,
+            });
         }
     },
-    handleSubmitDetection() {
+    async handleSubmitDetection() {
         const submitDetectionCallback = (data) => {
             this.modal.isOpen = false;
             if (data.verified != false) {
                 this.huntResults = `The information you entered matched correctly! Result:${data.message}`;
-                toast(this.huntResults, true);
+                toast({
+                  message: this.huntResults,
+                  position: "bottom-right",
+                  type: "is-success",
+                  dismissible: true,
+                  pauseOnHover: true,
+                  duration: 2000,
+                });
             } else {
                 this.huntResults = 'The information you entered did not match correctly.';
-                toast(this.huntResults, false);
+                toast({
+                  message: this.huntResults,
+                  position: "bottom-right",
+                  type: "is-danger",
+                  dismissible: true,
+                  pauseOnHover: true,
+                  duration: 2000,
+                });
             }
         };
-        restRequest('POST', {
-            host: this.selectedHost,
-            technique: this.selectedTechnique,
-            verify: this.detectByGuid ? 'guid' : 'pid',
-            info: this.detectionID,
-            redOpId: this.redOperation.id,
-            blueOpId: this.blueOperation.id,
-        }, submitDetectionCallback, '/plugin/gameboard/detection');
+        try {
+            const res = await this.$api.post("/plugin/gameboard/detection", {
+                host: this.selectedHost,
+                technique: this.selectedTechnique,
+                verify: this.detectByGuid ? 'guid' : 'pid',
+                info: this.detectionID,
+                redOpId: this.redOperation.id,
+                blueOpId: this.blueOperation.id,
+            });
+            submitDetectionCallback(res.data);
+        } catch (error) {
+            console.error(error);
+        }
     },
     resetTables() {
         this.exchanges = {
@@ -125,17 +184,19 @@ export default {
             false_neg: 0,
         };
     },
-    getOutput(linkID) {
+    async getOutput(linkID) {
         function loadResults(data) {
             return data.output ? b64DecodeUnicode(data.output) : '';
         }
-
-        restRequest('POST', {
-            index: 'result',
-            link_id: linkID
-        }, (d) => {
-            this.linkOutput = loadResults(d);
-        });
+        try {
+            const res = await this.$api.post("/api/rest", {
+                index: 'result',
+                link_id: linkID
+            });
+            this.linkOutput = loadResults(res.data);
+        } catch (error) {
+            console.error(error);
+        }
     },
     openModal(title, data = {}) {
         this.modal.title = title;
@@ -163,12 +224,24 @@ export default {
         this.stats.false_pos = Math.round((F_P / total) * 100);
         this.stats.false_neg = Math.round((F_N / total) * 100);
     },
-    createAnalytic(analytic) {
+    async createAnalytic(analytic) {
         const handleAnalyticCallback = (data) => {
             this.modal.isOpen = false;
-            toast('Custom analytic created; Operation started.', true);
+            toast({
+              message: "Custom analytic created; Operation started.",
+              position: "bottom-right",
+              type: "is-success",
+              dismissible: true,
+              pauseOnHover: true,
+              duration: 2000,
+            });
         };
-        restRequest('POST', analytic, handleAnalyticCallback, '/plugin/gameboard/analytic');
+        try {
+            const res = await this.$api.post("/plugin/gameboard/analytic", analytic);
+            handleAnalyticCallback(res.data);
+        } catch (error) {
+            console.error(error);
+        }
     },
     generateQueries(link, opType) {
         if (!link || !opType) return {};
@@ -229,121 +302,119 @@ div(ref="gameboardHeader")
         | Monitor red-and-blue team operations during an exercise to see if blue can detect, respond, and
         | shut down a red-team adversary.
     hr
-div
+div#gameboardPage
     table.table.points-table.is-fullwidth
-    thead
-        tr
-        th(colspan="2")
-            .is-flex.is-flex-direction-column.is-align-items-flex-end
-                .is-flex.is-flex-direction-column.is-align-items-center
-                    .is-flex.is-flex-direction-row.is-align-items-center.pb-2
-                        div
-                            em.fas.fa-user.pr-3.is-red-team.is-size-2(alt="Red team")
-                        .is-flex.is-flex-direction-row.is-size-1
-                            div(v-text="redOperation.points < 0 ? '-' : ''")
-                            .points-card.has-background-black-ter.mr-2.py-1.px-2(alt="Red team points", v-text="Math.floor(Math.abs(redOperation.points / 10))")
-                            .points-card.has-background-black-ter.py-1.px-2(alt="Red team points", v-text="Math.abs(redOperation.points % 10)")
-                    label.mb-1.is-size-7(for="red-op-select") Operation
-                    .select.is-small
-                        select#red-op-select(v-model="redOperation.id", @change="getGameboardData")
-                            option(value="") Select a red op
-                            template(v-for="op in redOps", :key="op.id")
-                                option(:value="op.id", v-text="op.name + ' - ' + op.start")
-                    label.is-size-7.mt-2(for="red-op-select", v-show="redOperation.state", :class="{'has-text-success': redOperation.state === 'running', 'has-text-warning': redOperation.state !== 'running'}", v-text="'is ' + redOperation.state")
-        td(colspan="3")
-            .is-flex.is-flex-direction-column.is-align-items-center
-                table.table.stats-table.my-5
-                    thead
-                    tr
-                        th
-                        th
-                            em.fas.fa-plus
-                        th
-                            em.fas.fa-minus
-                        th
-                    tbody
-                    tr
-                        th T
-                        td.is-blue-team.has-background-black(title="True Positive", v-text="stats.true_pos + '%'")
-                        td.is-blue-team.has-background-black(title="True Negative") 0%
-                        th T
-                    tr
-                        th F
-                        td.is-red-team.has-background-black(title="False Positive", v-text="stats.false_pos + '%'")
-                        td.is-red-team.has-background-black(title="False Negative", v-text="stats.false_neg + '%'")
-                        th F
-                div
-                    button.button.is-primary.is-small(@click="openModal('Analytic')")
-                        em.fas.fa-pencil-alt.pr-1 Custom Analytic
-        th(colspan="2")
-            .is-flex.is-flex-direction-column.is-align-items-flex-start
-                .is-flex.is-flex-direction-column.is-align-items-center
-                    .is-flex.is-flex-direction-row.is-align-items-center.pb-2
-                        .is-flex.is-flex-direction-row.is-size-1
-                            div(v-text="blueOperation.points < 0 ? '-' : ''")
-                            .points-card.has-background-black-ter.mr-2.py-1.px-2(alt="Blue team points", v-text="Math.floor(Math.abs(blueOperation.points) / 10)")
-                            .points-card.has-background-black-ter.py-1.px-2(alt="Blue team points", v-text="Math.abs(blueOperation.points % 10)")
-                        div
-                            em.pl-3.fas.fa-user.is-blue-team.is-size-2(alt="Blue team")
-                        label.mb-1.is-size-7(for="blue-op-select") Operation
-                        .select.is-small
-                            select#blue-op-select(v-model="blueOperation.id", @change="getGameboardData")
-                                option(value="") Select a blue op
-                                template(v-for="op in blueOps", :key="op.id")
-                                    option(:value="op.id", v-text="op.name + ' - ' + op.start")
-                        label.is-size-7.mt-2(for="blue-op-select", v-show="blueOperation.state", :class="{'has-text-success': blueOperation.state === 'running', 'has-text-warning': blueOperation.state !== 'running'}", v-text="'is ' + blueOperation.state")
-                        template(v-if="exchanges.blue.length > 0")
-                            div
-                                button.button.is-primary.is-blue-team.is-small.mt-3(@click="openModal('Add External Detection')")
-                                    em.fas.fa-plus.pr-1 External Detection
-        template(v-if="exchanges.blue.length < 1 && exchanges.red.length < 1")
-            tbody
+        thead
             tr
-                td.is-italic.has-text-centered(colspan="7") No exchanges to show.
-        template(v-if="redOperation.id.length > 0 && blueOperation.id.length > 0 && exchanges.red && exchanges.blue")
-            tbody
-            template(v-for="(exchange, index) in dataExchanges", :key="'exchange-' + index")
-                tr.m-2
-                    td(colspan="2")
-                        div(v-show="exchange[1].red.length > 0", class="is-flex is-align-items-flex-end is-flex-direction-column")
-                        template(v-for="redOp in exchange[1].red")
-                            div.p-2.card.has-red-line.my-2.has-text-centered(@click="openModal('Facts', redOp)", :class="{'is-red-team': access === 'red', 'has-background-black-ter': access !== 'red'}")
-                                button.facts-link.has-text-white(v-text="redOp.ability.name")
-                                template(v-if="access === 'red'")
-                                    div.is-flex.is-flex-direction-column.align-center
-                                        span(v-text="getHumanFriendlyTimeISO8601(redOp.finish)")
-                                        span.is-italic(v-text="redOp.paw")
-                                template(v-if="access === 'blue'")
-                                    span.is-italic(v-text="redOp.ability.technique_id")
-                                span.facts-star(v-show="access === 'red' && redOp.facts.length > 0")
-                                    em.fas.fa-star
-                    td.is-size-2.is-red-team.is-flex.is-justify-content-flex-end(colspan="1")
-                        template(v-for="redOp in exchange[1].red")
-                            div.is-red-team.points-container.p-2.mt-4.mb-5
-                                span.points-text(v-text="redOp.points.value >= 0 ? '+' + redOp.points.value : redOp.points.value")
-                    td.process-column(colspan="1")
-                        template(v-if="exchange[1].red.length > 0 && exchange[1].blue.length > 0")
-                            div.has-background-black-ter.points-card.has-text-centered.px-5.py-3(title="Process ID")
-                                p.mb-0.is-size-7.has-background-black-ter pid
-                                p.is-italic.is-size-6.has-background-black-ter(v-text="exchange[0]")
-                    td.is-size-2.is-blue-team(colspan="1")
-                        template(v-for="blueOp in exchange[1].blue")
-                            div.is-blue-team.points-container.p-2.mt-4.mb-5
-                                span.points-text(v-text="blueOp.points.value >= 0 ? '+' + blueOp.points.value : blueOp.points.value")
-                    td(colspan="2")
-                        template(v-if="exchange[1].blue.length > 0 && exchange[1].blue[0].finish")
-                            div.is-flex.is-justify-content-flex-start.is-flex-direction-column
-                            template(v-for="blueOp in exchange[1].blue")
-                                div.p-2.my-2.card.has-blue-line.has-text-centered(@click="openModal('Facts', blueOp)", :class="{'is-blue-team': access === 'blue', 'has-background-black-ter': access !== 'blue'}")
+            th(colspan="2")
+                .is-flex.is-flex-direction-column.is-align-items-flex-end
+                    .is-flex.is-flex-direction-column.is-align-items-center
+                        .is-flex.is-flex-direction-row.is-align-items-center.pb-2
+                            div
+                                em.fas.fa-user.pr-3.is-red-team.is-size-2(alt="Red team")
+                            .is-flex.is-flex-direction-row.is-size-1
+                                div(v-text="redOperation.points < 0 ? '-' : ''")
+                                .points-card.has-background-black-ter.mr-2.py-1.px-2(alt="Red team points", v-text="Math.floor(Math.abs(redOperation.points / 10))")
+                                .points-card.has-background-black-ter.py-1.px-2(alt="Red team points", v-text="Math.abs(redOperation.points % 10)")
+                        label.mb-1.is-size-7(for="red-op-select") Operation
+                        .select.is-small
+                            select#red-op-select(v-model="redOperation.id", @change="getGameboardData")
+                                option(value="") Select a red op
+                                template(v-for="op in redOps", :key="op.id")
+                                    option(:value="op.id", v-text="op.name + ' - ' + op.start")
+                        label.is-size-7.mt-2(for="red-op-select", v-show="redOperation.state", :class="{'has-text-success': redOperation.state === 'running', 'has-text-warning': redOperation.state !== 'running'}", v-text="'is ' + redOperation.state")
+            td(colspan="3")
+                .is-flex.is-flex-direction-column.is-align-items-center
+                    table.table.stats-table.my-5
+                        thead
+                        tr
+                            th
+                            th
+                                span +
+                            th
+                                span -
+                            th
+                        tbody
+                        tr
+                            th T
+                            td.is-blue-team.has-background-black(title="True Positive", v-text="stats.true_pos + '%'")
+                            td.is-blue-team.has-background-black(title="True Negative") 0%
+                            th T
+                        tr
+                            th F
+                            td.is-red-team.has-background-black(title="False Positive", v-text="stats.false_pos + '%'")
+                            td.is-red-team.has-background-black(title="False Negative", v-text="stats.false_neg + '%'")
+                            th F
+                    div
+                        button.button.is-primary.is-small(@click="openModal('Analytic')")
+                            em.fas.fa-pencil-alt.pr-1 Custom Analytic
+            th(colspan="2")
+                .is-flex.is-flex-direction-column.is-align-items-flex-start
+                    .is-flex.is-flex-direction-column.is-align-items-center
+                        .is-flex.is-flex-direction-column.is-align-items-center.pb-2
+                            .is-flex.is-flex-direction-row.is-size-1
+                                div(v-text="blueOperation.points < 0 ? '-' : ''")
+                                .points-card.has-background-black-ter.mr-2.py-1.px-2(alt="Blue team points", v-text="Math.floor(Math.abs(blueOperation.points) / 10)")
+                                .points-card.has-background-black-ter.py-1.px-2(alt="Blue team points", v-text="Math.abs(blueOperation.points % 10)")
+                            label.mb-1.is-size-7(for="blue-op-select") Operation
+                            .select.is-small
+                                select#blue-op-select(v-model="blueOperation.id", @change="getGameboardData")
+                                    option(value="") Select a blue op
+                                    template(v-for="op in blueOps", :key="op.id")
+                                        option(:value="op.id", v-text="op.name + ' - ' + op.start")
+                            label.is-size-7.mt-2(for="blue-op-select", v-show="blueOperation.state", :class="{'has-text-success': blueOperation.state === 'running', 'has-text-warning': blueOperation.state !== 'running'}", v-text="'is ' + blueOperation.state")
+                            template(v-if="exchanges.blue.length > 0")
+                                div
+                                    button.button.is-primary.is-blue-team.is-small.mt-3(@click="openModal('Add External Detection')")
+                                        em.fas.fa-plus.pr-1 External Detection
+            template(v-if="exchanges.blue.length < 1 && exchanges.red.length < 1")
+                tbody
+                tr
+                    td.is-italic.has-text-centered(colspan="7") No exchanges to show.
+            template(v-if="redOperation.id.length > 0 && blueOperation.id.length > 0 && exchanges.red && exchanges.blue")
+                tbody
+                template(v-for="(exchange, index) in dataExchanges", :key="'exchange-' + index")
+                    tr.m-2
+                        td(colspan="2")
+                            div(v-show="exchange[1].red.length > 0", class="is-flex is-align-items-flex-end is-flex-direction-column")
+                            template(v-for="redOp in exchange[1].red")
+                                div.p-2.card.has-red-line.my-2.has-text-centered(@click="openModal('Facts', redOp)", :class="{'is-red-team': access === 'red', 'has-background-black-ter': access !== 'red'}")
+                                    button.facts-link.has-text-white(v-text="redOp.ability.name")
                                     template(v-if="access === 'red'")
-                                        span.is-italic(v-text="blueOp.ability && blueOp.ability.name ? blueOp.ability.name : 'Click for more details.'")
+                                        div.is-flex.is-flex-direction-column.align-center
+                                            span(v-text="getHumanFriendlyTimeISO8601(redOp.finish)")
+                                            span.is-italic(v-text="redOp.paw")
                                     template(v-if="access === 'blue'")
-                                        div.is-flex.is-flex-direction-column.is-align-items-center
-                                            span.is-italic(v-text="blueOp.ability && blueOp.ability.name ? blueOp.ability.name : 'Click for more details.'")
-                                            span(v-text="blueOp.finish ? getHumanFriendlyTimeISO8601(blueOp?.finish) : ''")
-                                            span.is-italic(v-text="blueOp?.paw")
-                                    span.facts-star(v-show="access === 'blue' && blueOp?.facts?.length > 0")
+                                        span.is-italic(v-text="redOp.ability.technique_id")
+                                    span.facts-star(v-show="access === 'red' && redOp.facts.length > 0")
                                         em.fas.fa-star
+                        td.is-size-2.is-red-team.is-flex.is-justify-content-flex-end(colspan="1")
+                            template(v-for="redOp in exchange[1].red")
+                                div.is-red-team.points-container.p-2.mt-4.mb-5
+                                    span.points-text(v-text="redOp.points.value >= 0 ? '+' + redOp.points.value : redOp.points.value")
+                        td.process-column(colspan="1")
+                            template(v-if="exchange[1].red.length > 0 && exchange[1].blue.length > 0")
+                                div.has-background-black-ter.points-card.has-text-centered.px-5.py-3(title="Process ID")
+                                    p.mb-0.is-size-7.has-background-black-ter pid
+                                    p.is-italic.is-size-6.has-background-black-ter(v-text="exchange[0]")
+                        td.is-size-2.is-blue-team(colspan="1")
+                            template(v-for="blueOp in exchange[1].blue")
+                                div.is-blue-team.points-container.p-2.mt-4.mb-5
+                                    span.points-text(v-text="blueOp.points.value >= 0 ? '+' + blueOp.points.value : blueOp.points.value")
+                        td(colspan="2")
+                            template(v-if="exchange[1].blue.length > 0 && exchange[1].blue[0].finish")
+                                div.is-flex.is-justify-content-flex-start.is-flex-direction-column
+                                template(v-for="blueOp in exchange[1].blue")
+                                    div.p-2.my-2.card.has-blue-line.has-text-centered(@click="openModal('Facts', blueOp)", :class="{'is-blue-team': access === 'blue', 'has-background-black-ter': access !== 'blue'}")
+                                        template(v-if="access === 'red'")
+                                            span.is-italic(v-text="blueOp.ability && blueOp.ability.name ? blueOp.ability.name : 'Click for more details.'")
+                                        template(v-if="access === 'blue'")
+                                            div.is-flex.is-flex-direction-column.is-align-items-center
+                                                span.is-italic(v-text="blueOp.ability && blueOp.ability.name ? blueOp.ability.name : 'Click for more details.'")
+                                                span(v-text="blueOp.finish ? getHumanFriendlyTimeISO8601(blueOp?.finish) : ''")
+                                                span.is-italic(v-text="blueOp?.paw")
+                                        span.facts-star(v-show="access === 'blue' && blueOp?.facts?.length > 0")
+                                            em.fas.fa-star
 
 // MODAL
 template(v-if="modal.isOpen")
@@ -373,32 +444,32 @@ template(v-if="modal.isOpen")
                                     .select.is-small.my-2.ml-3
                                         select#host-select(v-model="selectedHost")
                                             option(value="") Select a host
-                                                template(v-for="host in hosts", :key="host")
-                                            option(:value="host") {{ host }}
+                                            template(v-for="host in hosts", :key="host")
+                                                option(:value="host") {{ host }}
                             div
                                 label(for="tactic-select") Tactic
                                 .modal-form-fields
                                     .select.is-small.my-2.ml-3
                                         select#tactic-select(v-model="selectedTactic", @change="handleTacticChange()")
                                             option(value="") Select a tactic
-                                                template(v-for="tactic in tactics", :key="tactic")
-                                            option(v-text="tactic")
+                                            template(v-for="tactic in tactics", :key="tactic")
+                                                option(v-text="tactic")
                             div
                                 label(for="technique-select") Technique
                                 .modal-form-fields
                                     .select.is-small.my-2.ml-3
                                         select#technique-select(v-model="selectedTechnique")
                                             option(value="") Select a technique
-                                                template(v-for="technique in techniques", :key="technique[0]")
-                                            option(v-text="technique[0] + ': ' + technique[1]")
+                                            template(v-for="technique in techniques", :key="technique[0]")
+                                                option(v-text="technique[0] + ': ' + technique[1]")
                             div
-                                label(for="detection-id-input")
-                                    span.has-tooltip-multiline.has-tooltip-right(data-tooltip="In order to add a manual Sysmon GUID detection, a blue agent must have been running on the target system during the red operation.")
+                                label(for="detection-id-input" v-tooltip="'In order to add a manual Sysmon GUID detection, a blue agent must have been running on the target system during the red operation.'")
+                                    span.has-tooltip-multiline.has-tooltip-right
                                     | Detect-by ID
                                 .modal-form-fields.pl-2#detection-id-choice
-                                    input(type="radio", id="detection-by-pid", v-model="detectByGuid", value="0", checked)
+                                    input(type="radio", id="detection-by-pid", :checked="detectByGuid === 0" @click="detectByGuid = 0")
                                     label(for="detection-by-pid") pid
-                                    input(type="radio", id="detection-by-guid", v-model="detectByGuid", value="1")
+                                    input(type="radio", id="detection-by-guid", :checked="detectByGuid === 1" @click="detectByGuid = 1")
                                     label(for="detection-by-guid") guid
                             div
                                 label(v-show="detectByGuid == '0'", for="detection-id-choice") pid
@@ -424,8 +495,7 @@ template(v-if="modal.isOpen")
                                         div
                                             label(for="fact-output") Output
                                             .modal-form-fields(v-show="modal.content.output !== 'False'")
-                                                code.has-text-white.m-2#fact-output
-                                                    p(v-text="modal.content.output")
+                                                input.input.is-small(id="fact-output", :value="linkOutput" readonly)
                                             .modal-form-fields(v-show="modal.content.output === 'False'")
                                                 input.input.is-italic.is-small(id="fact-output", :value="'No output'" readonly)
                         template(v-if="modal.content.points && modal.content.points.reason")
@@ -449,13 +519,13 @@ template(v-if="modal.isOpen")
                                             label(for="fact-elk-queries") ELK Queries
                                             .modal-form-fields#fact-elk-queries
                                                 template(v-for="(query, index) in generatedQueries.ELK", :key="'query-elk-' + index")
-                                                    code.has-text-white.m-2(v-text="query")
+                                                    input.input.is-small.m-2(:value="query" readonly)
                                     template(v-if="generatedQueries && generatedQueries.Splunk && generatedQueries.Splunk.length > 0")
                                         div
                                             label(for="fact-splunk-queries") Splunk Queries
                                             .modal-form-fields#fact-splunk-queries
                                                 template(v-for="(query, index) in generatedQueries.Splunk", :key="'query-splunk-' + index")
-                                                    code.has-text-white.m-2(v-text="query")
+                                                    textarea.textarea.m-2(:value="query" readonly)
             footer.modal-card-foot
                 nav.level
                     .level-left
@@ -568,6 +638,9 @@ template(v-if="modal.isOpen")
         background-color: transparent;
         font-size: 1em;
         text-decoration: underline;
+    }
+    #gameboardPage .table {
+      background-color: #161616 !important;
     }
 
     #gameboardPage .stats-table {

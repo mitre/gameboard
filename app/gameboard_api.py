@@ -48,6 +48,16 @@ class GameboardApi(BaseService):
         tactics = await self._construct_splash_tactics(abilities)
         return dict(red_ops=red_ops, blue_ops=blue_ops, hosts=hosts, tactics=tactics)
 
+    async def get_ops(self, request):
+        red_ops = [red.display for red in await self.data_svc.locate('operations', dict(access=self.Access.RED))]
+        blue_ops = [blue.display for blue in await self.data_svc.locate('operations', dict(access=self.Access.BLUE))]
+        agents = await self.data_svc.locate('agents', match=dict(access=BaseService.Access.RED))
+        hosts = set(agt.host for agt in agents)
+        hosts = list(hosts)
+        abilities = await self.data_svc.locate('abilities', match=dict(access=BaseService.Access.RED))
+        tactics = await self._construct_splash_tactics(abilities)
+        return web.json_response(dict(red_ops=red_ops, blue_ops=blue_ops, hosts=hosts, tactics=tactics))
+
     async def get_pieces(self, request):
         data = dict(await request.json())
         red_op = await self.data_svc.locate('operations', dict(id=data.get(self.RED_TEAM)))
